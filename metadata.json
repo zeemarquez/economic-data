@@ -1,0 +1,5 @@
+{
+  "name": "NominaRetro - Spanish Tax Calculator",
+  "description": "A retro-futuristic, minimalist Spanish salary tax calculator showing net income, IRPF, and social security distributions.",
+  "requestFramePermissions": []
+}
