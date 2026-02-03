@@ -81,9 +81,8 @@ export default function App() {
       </header>
 
       <main className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Left Column: Input & Key Stats */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        {/* 1. Configuración - mobile first, lg: left col row 1 */}
+        <div className="lg:col-start-1 lg:col-span-4 lg:row-start-1 flex flex-col gap-6">
           <Card
             className="border-white/20 shadow-[0_0_30px_-10px_rgba(255,255,255,0.05)] min-h-[260px] flex flex-col"
             icon={<Calculator size={18} />}
@@ -108,26 +107,66 @@ export default function App() {
               />
             </div>
           </Card>
+        </div>
 
+        {/* 2. Ingresos netos - mobile second (above Impuestos), lg: right col row 1 */}
+        <div className="lg:col-start-5 lg:col-span-8 lg:row-start-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card
+              className="col-span-1 md:col-span-3 bg-gradient-to-br from-neutral-900 to-black border-white/10 min-h-[260px] flex flex-col"
+              title="Ingresos netos anuales"
+              icon={<Wallet className="text-white" size={18} />}
+            >
+              <div className="flex-1 w-full flex flex-col md:flex-row justify-between items-center gap-8">
+                <div className="text-5xl md:text-7xl font-bold text-white font-mono tracking-tight">
+                  {formatWithThousands(result.netSalaryYearly)}€
+                </div>
+                <div className="flex gap-8 md:border-l md:border-white/10 md:pl-8">
+                   <div className="flex flex-row flex-wrap md:flex-col md:flex-nowrap items-baseline md:items-end justify-end gap-4 text-right">
+                     <div className="min-w-0">
+                       <span className="block text-neutral-500 font-mono text-[10px] uppercase tracking-widest mb-1">
+                         Mensual (12 pagas)
+                       </span>
+                       <span className="text-2xl md:text-3xl font-mono font-bold text-white tracking-tight">
+                         {formatWithThousands(result.netSalaryMonthly12)}€
+                       </span>
+                     </div>
+                     <div className="min-w-0">
+                       <span className="block text-neutral-500 font-mono text-[10px] uppercase tracking-widest mb-1">
+                         Mensual (14 pagas)
+                       </span>
+                       <span className="text-2xl md:text-3xl font-mono font-bold text-white tracking-tight">
+                         {formatWithThousands(result.netSalaryMonthly14)}€
+                       </span>
+                     </div>
+                   </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* 3. Impuestos - mobile third, lg: left col row 2 */}
+        <div className="lg:col-start-1 lg:col-span-4 lg:row-start-2">
           <Card
             title="Impuestos"
             icon={<Building2 size={18} />}
             className="flex flex-col gap-6"
           >
-            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-4">
-              <div>
+            <div className="flex flex-row flex-wrap items-baseline justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-1">
                   Tasa impositiva
                 </p>
-                <p className="text-3xl font-mono font-bold text-white tracking-tight">
+                <p className="text-2xl sm:text-3xl font-mono font-bold text-white tracking-tight">
                   {formatPercent(result.effectiveTaxRate)}%
                 </p>
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-neutral-400 text-xs font-mono uppercase tracking-widest mb-1">
                   Tasa impositiva real
                 </p>
-                <p className="text-3xl font-mono font-bold text-white tracking-tight">
+                <p className="text-2xl sm:text-3xl font-mono font-bold text-white tracking-tight">
                   {formatPercent(realTaxRate)}%
                 </p>
               </div>
@@ -165,54 +204,15 @@ export default function App() {
           </Card>
         </div>
 
-        {/* Right Column: Sankey Visualization */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          
-          {/* Main Net Salary Display */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card
-              className="col-span-1 md:col-span-3 bg-gradient-to-br from-neutral-900 to-black border-white/10 min-h-[260px] flex flex-col"
-              title="Ingresos netos anuales"
-              icon={<Wallet className="text-white" size={18} />}
-            >
-              <div className="flex-1 w-full flex flex-col md:flex-row justify-between items-center gap-8">
-                <div className="text-5xl md:text-7xl font-bold text-white font-mono tracking-tight">
-                  {formatWithThousands(result.netSalaryYearly)}€
-                </div>
-                <div className="flex gap-8 md:border-l md:border-white/10 md:pl-8">
-                   <div className="flex flex-col gap-4 text-right">
-                     <div>
-                       <span className="block text-neutral-500 font-mono text-[10px] uppercase tracking-widest mb-1">
-                         Mensual (12 pagas)
-                       </span>
-                       <span className="text-3xl font-mono font-bold text-white tracking-tight">
-                         {formatWithThousands(result.netSalaryMonthly12)}€
-                       </span>
-                     </div>
-                     <div>
-                       <span className="block text-neutral-500 font-mono text-[10px] uppercase tracking-widest mb-1">
-                         Mensual (14 pagas)
-                       </span>
-                       <span className="text-3xl font-mono font-bold text-white tracking-tight">
-                         {formatWithThousands(result.netSalaryMonthly14)}€
-                       </span>
-                     </div>
-                   </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Sankey Flow */}
+        {/* 4. Sankey - mobile fourth, lg: right col row 2 */}
+        <div className="lg:col-start-5 lg:col-span-8 lg:row-start-2 flex flex-col gap-6">
           <Card
             className="flex-1 flex flex-col h-full min-h-[500px]"
             title="Diagrama de flujo de costes"
             icon={<BarChart3 className="text-white" size={18} />}
           >
             <SalaryFlowSankey data={result} />
-            
           </Card>
-
         </div>
       </main>
 

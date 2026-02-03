@@ -28,12 +28,16 @@ export function Select<T extends string = string>({
   const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLUListElement>(null);
 
   const selected = options.find((o) => o.value === value);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inContainer = containerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inContainer && !inDropdown) {
         setOpen(false);
       }
     }
@@ -56,6 +60,7 @@ export function Select<T extends string = string>({
 
   const dropdownList = open && position && typeof document !== 'undefined' && (
     <ul
+      ref={dropdownRef}
       role="listbox"
       className="
         fixed z-[9999] py-1

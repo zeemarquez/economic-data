@@ -16,13 +16,19 @@ const COLORS = {
   link: '#ffffff',
 };
 
-const formatCurrency = (value: number) => 
-  value.toLocaleString('es-ES', { maximumFractionDigits: 0, style: 'currency', currency: 'EUR' });
+const formatCurrency = (value: number) =>
+  value.toLocaleString('es-ES', {
+    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    useGrouping: true,
+    style: 'currency',
+    currency: 'EUR',
+  });
 
 export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 }); 
-  const [hoveredPath, setHoveredPath] = useState<string | null>(null);
+  const [activeElement, setActiveElement] = useState<Set<string> | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -54,13 +60,12 @@ export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
   const { width, height } = dimensions;
   const isMobile = width < 600;
   
-  // Responsive padding
-  const paddingX = isMobile ? 60 : 120; // Reduced padding to give more width to the graph
+  // Responsive padding: extra left on mobile so "Coste total" label isn't cropped
+  const paddingX = isMobile ? 95 : 120;
   const paddingY = 30; // Reduced vertical padding
   const nodeWidth = 12;
-  
-  // Ensure we don't have negative gap
-  const colGap = Math.max(10, (width - paddingX * 2 - nodeWidth * 3) / 2);
+  const numColumns = 4; // Total Cost | Company SS + Gross | IRPF + Emp SS | Net
+  const colGap = Math.max(8, (width - paddingX * 2 - nodeWidth * numColumns) / (numColumns - 1));
 
   // ---- GAPS ----
   // Tighter gaps for a more compact look
@@ -100,7 +105,6 @@ export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
 
   // ---- COLUMN 2: Company SS & Gross Salary ----
   const heightC2 = getH(ssEmployer) + getH(grossSalary) + gapC2;
-  // Center relative to Node Total (which is essentially the center of the canvas)
   const startYC2 = nodeTotal.y + (nodeTotal.h - heightC2) / 2;
 
   const nodeCompanySS = {
@@ -121,23 +125,25 @@ export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
     color: COLORS.gross
   };
 
-  // ---- COLUMN 3: Net, IRPF, Employee SS ----
-  const heightC3 = getH(netSalaryYearly) + getH(irpfAmount) + getH(ssEmployee) + (gapC3 * 2);
-  // Center relative to Gross Node to make flow look straight
-  const startYC3 = nodeGross.y + (nodeGross.h - heightC3) / 2;
-
+  // ---- COLUMN 4: Net (rightmost) – compute y first so column 3 can sit above it ----
+  const netH = getH(netSalaryYearly);
+  const netY = nodeGross.y + (nodeGross.h - netH) / 2;
   const nodeNet = {
-    x: paddingX + nodeWidth * 2 + colGap * 2,
-    y: startYC3,
-    h: getH(netSalaryYearly),
+    x: paddingX + nodeWidth * 3 + colGap * 3,
+    y: netY,
+    h: netH,
     value: netSalaryYearly,
     label: "Ingreso neto",
     color: COLORS.net
   };
 
+  // ---- COLUMN 3: IRPF & Employee SS – placed above Ingreso neto ----
+  const heightC3 = getH(irpfAmount) + getH(ssEmployee) + gapC3;
+  const startYC3 = nodeNet.y - heightC3;
+
   const nodeIRPF = {
     x: paddingX + nodeWidth * 2 + colGap * 2,
-    y: startYC3 + nodeNet.h + gapC3,
+    y: startYC3,
     h: getH(irpfAmount),
     value: irpfAmount,
     label: "IRPF",
@@ -146,7 +152,7 @@ export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
 
   const nodeEmpSS = {
     x: paddingX + nodeWidth * 2 + colGap * 2,
-    y: startYC3 + nodeNet.h + gapC3 + nodeIRPF.h + gapC3,
+    y: startYC3 + nodeIRPF.h + gapC3,
     h: getH(ssEmployee),
     value: ssEmployee,
     label: "Seguridad Social trabajador",
@@ -191,23 +197,50 @@ export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
     id: 'total-gross'
   };
 
-  const linkGrossToNet = {
-    d: drawLink(nodeGross, nodeNet, 0, 0, getH(netSalaryYearly)),
-    id: 'gross-net'
-  };
-
+  // Order flows top-to-bottom to match targets (IRPF top, Emp SS middle, Net bottom) so they don't cross
   const linkGrossToIRPF = {
-    d: drawLink(nodeGross, nodeIRPF, getH(netSalaryYearly), 0, getH(irpfAmount)),
+    d: drawLink(nodeGross, nodeIRPF, 0, 0, getH(irpfAmount)),
     id: 'gross-irpf'
   };
 
   const linkGrossToEmpSS = {
-    d: drawLink(nodeGross, nodeEmpSS, getH(netSalaryYearly) + getH(irpfAmount), 0, getH(ssEmployee)),
+    d: drawLink(nodeGross, nodeEmpSS, getH(irpfAmount), 0, getH(ssEmployee)),
     id: 'gross-empss'
+  };
+
+  const linkGrossToNet = {
+    d: drawLink(nodeGross, nodeNet, getH(irpfAmount) + getH(ssEmployee), 0, getH(netSalaryYearly)),
+    id: 'gross-net'
   };
 
   const links = [linkTotalToSS, linkTotalToGross, linkGrossToNet, linkGrossToIRPF, linkGrossToEmpSS];
   const nodes = [nodeTotal, nodeCompanySS, nodeGross, nodeNet, nodeIRPF, nodeEmpSS];
+
+  // Each "element" = one flow (link) + its two endpoint nodes. Node index -> flow ids that include it.
+  const nodeFlowIds: string[][] = [
+    ['total-ss', 'total-gross'],           // 0 Total
+    ['total-ss'],                          // 1 CompanySS
+    ['total-gross', 'gross-irpf', 'gross-empss', 'gross-net'], // 2 Gross
+    ['gross-net'],                         // 3 Net
+    ['gross-irpf'],                        // 4 IRPF
+    ['gross-empss'],                       // 5 EmpSS
+  ];
+
+  const dimmedOpacity = 0.22;
+  const isLinkActive = (id: string) =>
+    activeElement === null || activeElement.has(id);
+  const isNodeActive = (i: number) =>
+    activeElement === null ||
+    nodeFlowIds[i].some((id) => activeElement.has(id));
+
+  const handleFlowActivate = (flowIds: Set<string>) => {
+    setActiveElement((prev) => {
+      if (prev === null) return flowIds;
+      const same =
+        prev.size === flowIds.size && [...prev].every((id) => flowIds.has(id));
+      return same ? null : flowIds;
+    });
+  };
 
   if (totalCostEmployer <= 0) return <div className="h-[400px] flex items-center justify-center text-neutral-500 font-mono text-xs">INTRODUCE UN SALARIO PARA VER EL FLUJO</div>;
 
@@ -226,6 +259,18 @@ export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
           </linearGradient>
         </defs>
 
+        {/* Invisible hit area to clear focus when clicking empty space */}
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill="transparent"
+          onClick={() => setActiveElement(null)}
+          style={{ pointerEvents: 'all' }}
+          aria-hidden
+        />
+
         {/* Links */}
         {links.map((link) => (
           <path
@@ -233,17 +278,34 @@ export const SalaryFlowSankey: React.FC<Props> = ({ data }) => {
             d={link.d}
             fill="url(#gradientLink)"
             stroke="white"
-            strokeWidth={hoveredPath === link.id ? 1 : 0}
+            strokeWidth={activeElement?.has(link.id) ? 1 : 0}
             strokeOpacity={0.3}
-            onMouseEnter={() => setHoveredPath(link.id)}
-            onMouseLeave={() => setHoveredPath(null)}
-            className="transition-all duration-300 ease-out hover:opacity-100 opacity-80 cursor-crosshair"
+            opacity={isLinkActive(link.id) ? 1 : dimmedOpacity}
+            onMouseEnter={() => setActiveElement(new Set([link.id]))}
+            onMouseLeave={() => setActiveElement(null)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFlowActivate(new Set([link.id]));
+            }}
+            className="transition-all duration-300 ease-out cursor-pointer"
+            style={{ pointerEvents: 'all' }}
           />
         ))}
 
-        {/* Nodes */}
+        {/* Nodes: hovering/tapping highlights all flows (and their endpoints) that use this node */}
         {nodes.map((node, i) => (
-          <g key={i}>
+          <g
+            key={i}
+            opacity={isNodeActive(i) ? 1 : dimmedOpacity}
+            onMouseEnter={() => setActiveElement(new Set(nodeFlowIds[i]))}
+            onMouseLeave={() => setActiveElement(null)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFlowActivate(new Set(nodeFlowIds[i]));
+            }}
+            className="transition-all duration-300 ease-out cursor-pointer"
+            style={{ pointerEvents: 'all' }}
+          >
             <rect
               x={node.x}
               y={node.y}
