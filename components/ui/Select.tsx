@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export interface SelectOption<T extends string = string> {
   value: T;
@@ -22,8 +23,23 @@ export function Select<T extends string = string>({
   id,
   className = '',
 }: SelectProps<T>) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className={`flex flex-col gap-2 w-full ${className}`}>
+    <div ref={containerRef} className={`flex flex-col gap-2 w-full ${className}`}>
       <label
         htmlFor={id}
         className="text-xs uppercase tracking-widest text-neutral-500 font-mono pl-1"
@@ -31,31 +47,67 @@ export function Select<T extends string = string>({
         {label}
       </label>
       <div className="relative group">
-        <select
+        <button
+          type="button"
           id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value as T)}
+          onClick={() => setOpen((o) => !o)}
           className="
             w-full bg-neutral-900/50 border border-neutral-800 rounded-lg
-            py-4 pl-4 pr-10
-            text-lg font-mono text-white
+            py-4 pl-4 pr-4
+            text-left text-lg font-mono text-white
             focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50
             transition-all duration-300 shadow-inner
-            appearance-none cursor-pointer
+            cursor-pointer flex items-center justify-between
           "
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right 1rem center',
-          }}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-labelledby={id ? `${id}-label` : undefined}
         >
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          <span className="truncate">{selected?.label ?? value}</span>
+          <ChevronDown
+            className={`w-5 h-5 text-neutral-400 shrink-0 ml-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            aria-hidden
+          />
+        </button>
         <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-500" />
+
+        {open && (
+          <ul
+            role="listbox"
+            className="
+              absolute z-50 left-0 right-0 mt-1 py-1
+              bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl
+              max-h-60 overflow-auto
+            "
+            aria-activedescendant={value}
+          >
+            {options.map((opt) => (
+              <li
+                key={opt.value}
+                role="option"
+                aria-selected={opt.value === value}
+                onClick={() => {
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onChange(opt.value);
+                    setOpen(false);
+                  }
+                }}
+                className={`
+                  px-4 py-3 text-left text-sm font-mono cursor-pointer
+                  transition-colors duration-150
+                  ${opt.value === value ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'}
+                `}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

@@ -8,7 +8,10 @@ import { Card } from './components/ui/Card';
 import { SalaryFlowSankey } from './components/charts/SalaryFlowSankey';
 import { Calculator, Wallet, Building2, BarChart3, Info } from 'lucide-react';
 
-const REGIME_OPTIONS = SPANISH_REGIMES_2026.map((r) => ({ value: r.id, label: r.name }));
+const REGIME_OPTIONS = SPANISH_REGIMES_2026.map((r) => ({
+  value: r.id,
+  label: r.name.replace(/\s*\(2026\)\s*$/, ''),
+}));
 const DEFAULT_REGIME_ID = 'es-madrid-2026';
 
 function getRegimeById(id: string): TaxRegime {
@@ -49,7 +52,6 @@ export default function App() {
   const result = salaryBreakdown.toTaxResult();
   const realTaxRate = salaryBreakdown.realTaxRate;
   const taxBreakdown = salaryBreakdown.breakdown;
-  const brackets = salaryBreakdown.result?.brackets ?? [];
 
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
@@ -132,21 +134,19 @@ export default function App() {
             </div>
 
             <div className="mt-6 divide-y divide-white/5 border border-white/5 rounded-lg overflow-hidden">
-              {taxBreakdown.map((tax, index) => (
+              {taxBreakdown.map((tax) => (
                 <div
                   key={tax.label}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-neutral-900/40 ${
-                    index === 0 ? '' : ''
-                  }`}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 bg-neutral-900/40"
                 >
-                  <span className="text-neutral-200 text-xs font-mono uppercase tracking-widest">
+                  <span className="text-neutral-300 text-xs font-mono">
                     {tax.label}
                   </span>
-                  <div className="flex items-baseline gap-6 sm:gap-12">
-                    <span className="text-neutral-400 font-mono text-sm">
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-neutral-500 font-mono text-xs">
                       {formatPercent(tax.rate)}%
                     </span>
-                    <span className="text-white font-mono text-lg tracking-tight">
+                    <span className="text-white font-mono text-sm tabular-nums">
                       {formatWithThousands(tax.amount)}€
                     </span>
                   </div>
