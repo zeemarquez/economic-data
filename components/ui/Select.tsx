@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
 
 export interface SelectOption<T extends string = string> {
@@ -24,7 +25,9 @@ export function Select<T extends string = string>({
   className = '',
 }: SelectProps<T>) {
   const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const selected = options.find((o) => o.value === value);
 
@@ -38,6 +41,62 @@ export function Select<T extends string = string>({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    } else {
+      setPosition(null);
+    }
+  }, [open]);
+
+  const dropdownList = open && position && typeof document !== 'undefined' && (
+    <ul
+      role="listbox"
+      className="
+        fixed z-[9999] py-1
+        bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl
+        max-h-60 overflow-auto
+      "
+      style={{
+        top: `${position.top}px`,
+        left: `${position.left}px`,
+        width: `${position.width}px`,
+      }}
+      aria-activedescendant={value}
+    >
+      {options.map((opt) => (
+        <li
+          key={opt.value}
+          role="option"
+          aria-selected={opt.value === value}
+          onClick={() => {
+            onChange(opt.value);
+            setOpen(false);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onChange(opt.value);
+              setOpen(false);
+            }
+          }}
+          className={`
+            px-4 py-3 text-left text-sm font-mono cursor-pointer
+            transition-colors duration-150
+            ${opt.value === value ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'}
+          `}
+        >
+          {opt.label}
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <div ref={containerRef} className={`flex flex-col gap-2 w-full ${className}`}>
       <label
@@ -48,6 +107,7 @@ export function Select<T extends string = string>({
       </label>
       <div className="relative group">
         <button
+          ref={buttonRef}
           type="button"
           id={id}
           onClick={() => setOpen((o) => !o)}
@@ -70,45 +130,8 @@ export function Select<T extends string = string>({
           />
         </button>
         <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 opacity-0 group-focus-within:opacity-100 pointer-events-none transition-opacity duration-500" />
-
-        {open && (
-          <ul
-            role="listbox"
-            className="
-              absolute z-50 left-0 right-0 mt-1 py-1
-              bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl
-              max-h-60 overflow-auto
-            "
-            aria-activedescendant={value}
-          >
-            {options.map((opt) => (
-              <li
-                key={opt.value}
-                role="option"
-                aria-selected={opt.value === value}
-                onClick={() => {
-                  onChange(opt.value);
-                  setOpen(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onChange(opt.value);
-                    setOpen(false);
-                  }
-                }}
-                className={`
-                  px-4 py-3 text-left text-sm font-mono cursor-pointer
-                  transition-colors duration-150
-                  ${opt.value === value ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'}
-                `}
-              >
-                {opt.label}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
+      {dropdownList && createPortal(dropdownList, document.body)}
     </div>
   );
 }

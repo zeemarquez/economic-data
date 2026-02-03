@@ -211,31 +211,13 @@ export default function App() {
           >
             <SalaryFlowSankey data={result} />
             
-            <div className="mt-auto pt-6 border-t border-white/5 grid grid-cols-1 md:grid-cols-2 gap-8">
-               <div>
-                  <h4 className="text-[10px] text-neutral-300 font-mono font-bold uppercase mb-2">Perspectiva de la empresa</h4>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed font-mono">
-                    La inversión total de la empresa supera el salario bruto en aproximadamente un 32 %. Esta diferencia se destina a las cotizaciones a la Seguridad Social que cubren sanidad, pensiones y desempleo.
-                  </p>
-               </div>
-               <div>
-                  <h4 className="text-[10px] text-neutral-300 font-mono font-bold uppercase mb-2">Eficiencia fiscal</h4>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed font-mono">
-                    {result.effectiveTaxRate < 20 ? 'Carga fiscal estándar en los tramos iniciales.' : result.effectiveTaxRate < 35 ? 'Presión fiscal progresiva creciente a medida que sube la renta.' : 'Se requiere alta eficiencia; se aplica una retención progresiva elevada.'} El IRPF se calcula de forma progresiva.
-                  </p>
-               </div>
-            </div>
           </Card>
 
         </div>
       </main>
 
       <footer className="w-full max-w-6xl mt-12 border-t border-white/5 pt-6 flex flex-col md:flex-row justify-between items-center text-neutral-600 text-xs font-mono">
-        <p>© 2024 NominaRetro. Sistema de análisis fiscal en tiempo real.</p>
-        <div className="flex gap-4 mt-2 md:mt-0">
-          <span className="hover:text-white transition-colors cursor-pointer">Documentación</span>
-          <span className="hover:text-white transition-colors cursor-pointer">Estado de la API</span>
-        </div>
+        
       </footer>
     </div>
   );
