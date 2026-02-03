@@ -31,17 +31,35 @@ export interface TaxRegimeResult {
   extra: Record<string, number>;
 }
 
-/** One bracket in a progressive tax (e.g. IRPF). */
+/** One bracket in a progressive tax (e.g. IRPF) – used for result breakdown. */
 export interface TaxBracketBreakdown {
   label: string;
   rate: number;
   amount: number;
 }
 
+/** Definition of one bracket for a progressive tax (input). Generic for any regime. */
+export interface TaxBracketDefinition {
+  /** Upper limit of this bracket (inclusive). Use Infinity for the top bracket. */
+  limit: number;
+  /** Rate applied to income in this bracket (e.g. 0.095 for 9.5%). */
+  rate: number;
+}
+
+/** Optional metadata for a tax regime (country, region, year). Kept general for any regime. */
+export interface TaxRegimeMetadata {
+  country?: string;
+  region?: string;
+  year?: number;
+  [key: string]: unknown;
+}
+
 /** A tax regime computes a full result from salary inputs. */
 export interface TaxRegime {
   readonly id: string;
   readonly name: string;
+  /** Optional metadata (country, region, year) for filtering or display. */
+  readonly metadata?: TaxRegimeMetadata;
   compute(inputs: SalaryInputs): TaxRegimeResult;
 }
 

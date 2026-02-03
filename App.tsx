@@ -1,11 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { SalaryBreakdown } from './SalaryBreakdown';
-import { SpanishTaxRegime } from './regimes';
+import { SPANISH_REGIMES_2026 } from './regimes';
+import type { TaxRegime } from './types';
 import { Input } from './components/ui/Input';
+import { Select } from './components/ui/Select';
 import { Card } from './components/ui/Card';
-import { StatBox } from './components/StatBox';
 import { SalaryFlowSankey } from './components/charts/SalaryFlowSankey';
 import { Calculator, Wallet, Building2, BarChart3, Info } from 'lucide-react';
+
+const REGIME_OPTIONS = SPANISH_REGIMES_2026.map((r) => ({ value: r.id, label: r.name }));
+const DEFAULT_REGIME_ID = 'es-madrid-2026';
+
+function getRegimeById(id: string): TaxRegime {
+  const found = SPANISH_REGIMES_2026.find((r) => r.id === id);
+  return found ?? SPANISH_REGIMES_2026.find((r) => r.id === DEFAULT_REGIME_ID)!;
+}
 
 const formatWithThousands = (value: number) => {
   const rounded = Math.round(value);
@@ -30,14 +39,17 @@ const sanitizeNumberInput = (value: string) => value.replace(/\D/g, '');
 export default function App() {
   const [grossSalary, setGrossSalary] = useState<number>(40000);
   const [salaryInput, setSalaryInput] = useState<string>(formatWithThousands(40000));
+  const [regimeId, setRegimeId] = useState<string>(DEFAULT_REGIME_ID);
 
+  const regime = useMemo(() => getRegimeById(regimeId), [regimeId]);
   const salaryBreakdown = useMemo(
-    () => new SalaryBreakdown({ grossSalary }, SpanishTaxRegime),
-    [grossSalary]
+    () => new SalaryBreakdown({ grossSalary }, regime),
+    [grossSalary, regime]
   );
   const result = salaryBreakdown.toTaxResult();
   const realTaxRate = salaryBreakdown.realTaxRate;
   const taxBreakdown = salaryBreakdown.breakdown;
+  const brackets = salaryBreakdown.result?.brackets ?? [];
 
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
@@ -75,7 +87,7 @@ export default function App() {
             icon={<Calculator size={18} />}
             title="Configuración"
           >
-            <div className="flex-1 flex flex-col justify-center">
+            <div className="flex-1 flex flex-col justify-center gap-6">
               <Input 
                 label="Salario bruto anual" 
                 type="text"
@@ -84,6 +96,13 @@ export default function App() {
                 onChange={handleSalaryChange}
                 prefix="€"
                 autoFocus
+              />
+              <Select
+                label="Comunidad autónoma"
+                value={regimeId}
+                options={REGIME_OPTIONS}
+                onChange={setRegimeId}
+                id="autonomous-community"
               />
             </div>
           </Card>
@@ -139,7 +158,7 @@ export default function App() {
               <div className="flex gap-3">
                 <Info size={16} className="text-neutral-500 mt-1 shrink-0" />
                 <p className="text-[10px] text-neutral-500 font-mono leading-relaxed">
-                  Tasas calculadas sobre el salario bruto estimado y régimen general 2024.
+                  Tasas calculadas sobre el salario bruto estimado. Régimen {regime.name}.
                 </p>
               </div>
             </div>
@@ -189,11 +208,6 @@ export default function App() {
             className="flex-1 flex flex-col h-full min-h-[500px]"
             title="Diagrama de flujo de costes"
             icon={<BarChart3 className="text-white" size={18} />}
-            headerAside={
-              <div className="text-[10px] font-mono text-neutral-600 bg-neutral-900 px-2 py-1 border border-white/5 rounded">
-                ESCALA: 1px = €{formatWithThousands(Math.round(result.totalCostEmployer / 300))}
-              </div>
-            }
           >
             <SalaryFlowSankey data={result} />
             
