@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { calculateSalary } from './utils/taxCalculations';
-import { TaxResult } from './types';
+import React, { useState, useMemo } from 'react';
+import { SalaryBreakdown } from './SalaryBreakdown';
+import { SpanishTaxRegime } from './regimes';
 import { Input } from './components/ui/Input';
 import { Card } from './components/ui/Card';
 import { StatBox } from './components/StatBox';
@@ -30,11 +30,14 @@ const sanitizeNumberInput = (value: string) => value.replace(/\D/g, '');
 export default function App() {
   const [grossSalary, setGrossSalary] = useState<number>(40000);
   const [salaryInput, setSalaryInput] = useState<string>(formatWithThousands(40000));
-  const [result, setResult] = useState<TaxResult>(calculateSalary(40000));
 
-  useEffect(() => {
-    setResult(calculateSalary(grossSalary));
-  }, [grossSalary]);
+  const salaryBreakdown = useMemo(
+    () => new SalaryBreakdown({ grossSalary }, SpanishTaxRegime),
+    [grossSalary]
+  );
+  const result = salaryBreakdown.toTaxResult();
+  const realTaxRate = salaryBreakdown.realTaxRate;
+  const taxBreakdown = salaryBreakdown.breakdown;
 
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
@@ -50,29 +53,6 @@ export default function App() {
     setGrossSalary(numericValue);
     setSalaryInput(formatWithThousands(numericValue));
   };
-
-  const realTaxRate =
-    result.totalCostEmployer > 0
-      ? ((result.totalTax + result.ssEmployer) / result.totalCostEmployer) * 100
-      : 0;
-
-  const taxBreakdown = [
-    {
-      label: 'IRPF',
-      rate: result.grossSalary > 0 ? (result.irpfAmount / result.grossSalary) * 100 : 0,
-      amount: result.irpfAmount,
-    },
-    {
-      label: 'Seguridad Social (empresa)',
-      rate: result.grossSalary > 0 ? (result.ssEmployer / result.grossSalary) * 100 : 0,
-      amount: result.ssEmployer,
-    },
-    {
-      label: 'Seguridad Social (trabajador)',
-      rate: result.grossSalary > 0 ? (result.ssEmployee / result.grossSalary) * 100 : 0,
-      amount: result.ssEmployee,
-    },
-  ];
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
