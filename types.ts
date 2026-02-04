@@ -85,3 +85,41 @@ export interface ChartDataPoint {
   value: number;
   fill?: string;
 }
+
+// ----- State budget / spending (generic for any country or year) -----
+
+/** A single policy or line item within a budget category (e.g. "Pensiones", "Sanidad"). */
+export interface BudgetPolicyItem {
+  name: string;
+  amount: number;
+}
+
+/** A budget category grouping several policies (e.g. "Protección y promoción social"). */
+export interface BudgetCategory {
+  totalAmount: number;
+  policies: BudgetPolicyItem[];
+}
+
+/** Full state budget data: category name -> category. Reusable for different countries/years. */
+export type StateBudgetData = Record<string, BudgetCategory>;
+
+/** Raw JSON shape for Spain 2023 (nombre/presupuesto/total_presupuesto/politicas). Map to BudgetCategory when loading. */
+export interface SpanishBudgetCategoryRaw {
+  total_presupuesto: number;
+  politicas: { nombre: string; presupuesto: number }[];
+}
+
+/** A single spending item (new flat format with label and description). */
+export interface SpendingItem {
+  name: string;
+  amount: number;
+  category: string;
+  label: string;
+  description: string;
+}
+
+/** State spending data: total and flat list of items (reusable for any country/year). */
+export interface SpendingData {
+  total_spending: number;
+  spending_items: SpendingItem[];
+}

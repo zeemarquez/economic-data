@@ -1,0 +1,75 @@
+{
+    "total_ingresos": 389063220790,
+    "ingresos_items": [
+      {
+        "name": "Impuesto sobre la Renta de las Personas Físicas (IRPF)",
+        "amount": 113123280000,
+        "category": "Impuestos directos y cotizaciones sociales",
+        "label": "IRPF",
+        "description": "Gravamen sobre la renta de los residentes en España durante el año natural."
+      },
+      {
+        "name": "Impuesto sobre el Valor Añadido (IVA)",
+        "amount": 82595080000,
+        "category": "Impuestos indirectos",
+        "label": "IVA",
+        "description": "Impuesto sobre el consumo cargado sobre la entrega de bienes y prestaciones de servicios."
+      },
+      {
+        "name": "Impuesto sobre Sociedades",
+        "amount": 28519000000,
+        "category": "Impuestos directos y cotizaciones sociales",
+        "label": "Sociedades",
+        "description": "Tributo que grava la renta de las sociedades y demás entidades jurídicas."
+      },
+      {
+        "name": "Impuestos Especiales",
+        "amount": 22287410000,
+        "category": "Impuestos indirectos",
+        "label": "II.EE.",
+        "description": "Gravámenes sobre consumos específicos como alcohol, tabaco e hidrocarburos."
+      },
+      {
+        "name": "Tasas, precios públicos y otros ingresos",
+        "amount": 2684530510,
+        "category": "Tasas y otros ingresos",
+        "label": "Tasas",
+        "description": "Ingresos por prestación de servicios públicos o actividades en régimen de derecho público."
+      },
+      {
+        "name": "Impuesto sobre las Primas de Seguros",
+        "amount": 2429434130,
+        "category": "Impuestos indirectos",
+        "label": "Seguros",
+        "description": "Gravamen sobre las operaciones de seguros y capitalización."
+      },
+      {
+        "name": "Transferencias Corrientes",
+        "amount": 19564230450,
+        "category": "Transferencias corrientes",
+        "label": "Transferencias",
+        "description": "Ingresos recibidos de otras entidades sin contrapartida directa para financiar gastos corrientes."
+      },
+      {
+        "name": "Pasivos Financieros",
+        "amount": 110540251070,
+        "category": "Operaciones financieras",
+        "label": "Deuda Pública",
+        "description": "Ingresos derivados de la emisión de deuda y préstamos recibidos por el Estado."
+      },
+      {
+        "name": "Ingresos Patrimoniales",
+        "amount": 5420004620,
+        "category": "Ingresos patrimoniales",
+        "label": "Patrimonio",
+        "description": "Rentas derivadas de activos propiedad del Estado, como dividendos e intereses."
+      },
+      {
+        "name": "Impuesto sobre Transacciones Financieras",
+        "amount": 335000000,
+        "category": "Otros impuestos indirectos",
+        "label": "Tasa Tobin",
+        "description": "Gravamen sobre la adquisición de acciones de empresas cotizadas."
+      }
+    ]
+  }

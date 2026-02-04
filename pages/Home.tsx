@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
-import { Calculator, Percent } from 'lucide-react';
+import { Calculator, Percent, PieChart } from 'lucide-react';
 
 const PAGES = [
   {
@@ -15,6 +15,12 @@ const PAGES = [
     title: 'Interés',
     description: 'Interés compuesto con ahorro mensual. Capital inicial, tipo anual y duración.',
     icon: <Percent size={20} />,
+  },
+  {
+    path: '/gasto-espana',
+    title: 'Gasto España',
+    description: 'Desglose visual del presupuesto del Estado español por categorías y políticas.',
+    icon: <PieChart size={20} />,
   },
 ];
 
