@@ -40,7 +40,7 @@
         .terminal-grid {
             display: grid;
             grid-template-columns: 250px 1fr 300px;
-            grid-template-rows: 60px 1fr 200px 40px;
+            grid-template-rows: 100px 1fr 200px 40px;
             height: 100%;
             width: 100%;
             padding: 20px;
@@ -147,7 +147,7 @@
 
         /* --- SPECIFIC MODULES --- */
         
-        /* Header */
+        /* Header - taller so overlay title (EconomicData) has room */
         .header {
             grid-column: 1 / -1;
             display: flex;
@@ -155,6 +155,7 @@
             align-items: center;
             border-bottom: 2px solid var(--fg-primary);
             padding: 0 10px;
+            min-height: 100px;
             background: var(--dark-accents);
         }
         
@@ -255,9 +256,10 @@
         @media (max-width: 768px) {
             .terminal-grid {
                 grid-template-columns: 1fr;
-                grid-template-rows: 50px 200px 1fr 100px 40px;
+                grid-template-rows: 100px 200px 1fr 100px 40px;
                 overflow-y: auto;
             }
+            .header span { display: none; }
             .main-chart-container { grid-column: 1 / -1; grid-row: 2 / 3; }
             .stock-list { grid-column: 1 / -1; grid-row: 3 / 4; height: 150px;}
             .kpi-box { grid-column: 1 / -1; grid-row: 4 / 5; }
@@ -274,7 +276,6 @@
         <div class="header">
             <span>SYS.MONITOR_V1.2</span>
             <span id="clock">00:00:00 UTC</span>
-            <span>NET: <span class="blink">ONLINE</span></span>
         </div>
 
         <!-- Sidebar: Stock List -->
