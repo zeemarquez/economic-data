@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Nomina from './pages/Nomina';
 import Interes from './pages/Interes';
 import GastoEspana from './pages/GastoEspana';
+import EnergiaEspana from './pages/EnergiaEspana';
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <Route path="/nomina" element={<Nomina />} />
         <Route path="/interes" element={<Interes />} />
         <Route path="/gasto-espana" element={<GastoEspana />} />
+        <Route path="/energia-espana" element={<EnergiaEspana />} />
       </Routes>
     </BrowserRouter>
   );

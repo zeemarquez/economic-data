@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
-import { Calculator, Percent, PieChart } from 'lucide-react';
+import { Calculator, Percent, PieChart, Zap } from 'lucide-react';
 
 const PAGES = [
   {
@@ -21,6 +21,12 @@ const PAGES = [
     title: 'Gasto España',
     description: 'Desglose visual del presupuesto del Estado español por categorías y políticas.',
     icon: <PieChart size={20} />,
+  },
+  {
+    path: '/energia-espana',
+    title: 'Energía España',
+    description: 'Visualización retro-futurista de generación energética: nuclear, eólica y solar.',
+    icon: <Zap size={20} />,
   },
 ];
 

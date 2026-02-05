@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro-Futuristic Energy Terminal - Grayscale</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --neon-glow: #ffffff;
+            --mid-gray: #888888;
+            --bg-dark: #0a0a0a;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--neon-glow);
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.3) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.03),
+                rgba(150, 150, 150, 0.02),
+                rgba(255, 255, 255, 0.03)
+            );
+            background-size: 100% 3px, 4px 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.88; }
+            10% { opacity: 0.99; }
+            15% { opacity: 0.92; }
+            20% { opacity: 0.95; }
+            100% { opacity: 0.98; }
+        }
+
+        .crt-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: flicker 0.2s infinite;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 80vh;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
+            image-rendering: pixelated;
+        }
+
+        .ui-overlay {
+            position: absolute;
+            bottom: 8%;
+            left: 8%;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.75rem;
+            border-left: 2px solid var(--mid-gray);
+            padding-left: 15px;
+        }
+
+        .battery-overlay {
+            position: absolute;
+            bottom: 8%;
+            right: 8%;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.75rem;
+            border-right: 2px solid var(--mid-gray);
+            padding-right: 15px;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        /* Battery UI Styles */
+        .battery-container {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            gap: 6px;
+        }
+
+        .battery-body {
+            width: 32px;
+            height: 14px;
+            border: 1px solid var(--mid-gray);
+            padding: 1px;
+            position: relative;
+            display: flex;
+            gap: 1px;
+        }
+
+        .battery-body::after {
+            content: '';
+            position: absolute;
+            left: -3px; /* Connector on left for right-side placement */
+            top: 3px;
+            width: 2px;
+            height: 6px;
+            background: var(--mid-gray);
+        }
+
+        .battery-segment {
+            flex: 1;
+            height: 100%;
+            background: var(--neon-glow);
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .battery-segment.active {
+            opacity: 1;
+        }
+
+        .status-bar {
+            width: 180px;
+            height: 2px;
+            background: #222;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-fill {
+            height: 100%;
+            background: var(--neon-glow);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px white;
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 40%, black 150%);
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    
+    <div class="crt-container">
+        <canvas id="mainCanvas"></canvas>
+        
+        <!-- Left Side: Generation Stats -->
+        <div class="ui-overlay">
+            <div class="opacity-40 mb-1">Grid Management // OS_B/W</div>
+            <div class="font-bold text-white">SYSTEM_GEN: ONLINE</div>
+            <div class="mt-2 text-xs text-gray-400">TOTL_kWh: <span id="energyVal" class="text-white">0000.00</span></div>
+            <div class="status-bar">
+                <div id="statusBar" class="status-fill"></div>
+            </div>
+            <div class="mt-4 text-[9px] opacity-30">BEAM_HARVEST_v4.5 // GEN_ACTIVE</div>
+        </div>
+
+        <!-- Right Side: Battery Storage -->
+        <div class="battery-overlay">
+            <div class="opacity-40 mb-1">Storage // CELL_01</div>
+            <div class="flex items-center gap-2">
+                <div class="font-bold text-white">ACCUMULATOR</div>
+                <div class="battery-container">
+                    <svg id="boltIcon" width="8" height="12" viewBox="0 0 10 16" fill="white" class="opacity-30">
+                        <path d="M6 0L0 9h4l-1 7 7-9H6l1-7z"/>
+                    </svg>
+                    <div class="battery-body" id="battery">
+                        <div class="battery-segment"></div>
+                        <div class="battery-segment"></div>
+                        <div class="battery-segment"></div>
+                        <div class="battery-segment"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-2 text-xs text-gray-400">LEVEL: <span id="battPercent" class="text-white">00%</span></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const energyDisplay = document.getElementById('energyVal');
+        const statusBar = document.getElementById('statusBar');
+        const segments = document.querySelectorAll('.battery-segment');
+        const boltIcon = document.getElementById('boltIcon');
+        const battPercentDisplay = document.getElementById('battPercent');
+
+        let width, height;
+        let rotation = 0;
+        let turbineSpeed = 0.015;
+        let targetTurbineSpeed = 0.015;
+        let totalEnergy = 0;
+        
+        let sunT = 0; 
+        let sunDirection = 1;
+        const sunSpeed = 0.0015;
+
+        const particles = [];
+        const VOXEL_SIZE = 6;
+
+        class VoxelChunk {
+            constructor(startX, startY) {
+                this.x = Math.round(startX / VOXEL_SIZE) * VOXEL_SIZE;
+                this.y = Math.round(startY / VOXEL_SIZE) * VOXEL_SIZE;
+                this.speedY = -(Math.random() * 0.4 + 0.3);
+                this.life = 1.0;
+                this.decay = 0.003 + Math.random() * 0.004;
+                
+                this.blocks = [];
+                const numBlocks = Math.floor(Math.random() * 6) + 5;
+                for(let i=0; i<numBlocks; i++) {
+                    this.blocks.push({
+                        ox: (Math.floor(Math.random() * 5) - 2) * VOXEL_SIZE,
+                        oy: (Math.floor(Math.random() * 3) - 1) * VOXEL_SIZE
+                    });
+                }
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.life -= this.decay;
+            }
+
+            draw() {
+                const alpha = Math.max(0, this.life);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.45})`;
+                this.blocks.forEach(b => {
+                    ctx.fillRect(
+                        this.x + b.ox, 
+                        Math.round(this.y / VOXEL_SIZE) * VOXEL_SIZE + b.oy, 
+                        VOXEL_SIZE, 
+                        VOXEL_SIZE
+                    );
+                });
+            }
+        }
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        function updateBatteryUI(percent) {
+            const activeSegments = Math.ceil((percent / 100) * segments.length);
+            segments.forEach((s, i) => {
+                if (i < activeSegments) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+
+            // Make bolt pulse when charging (high production)
+            if (turbineSpeed > 0.05) {
+                boltIcon.style.opacity = "1";
+            } else {
+                boltIcon.style.opacity = "0.3";
+            }
+        }
+
+        function drawElements() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const white = '#ffffff';
+            const lightGray = '#cccccc';
+            const midGray = '#444444';
+            const darkGray = '#222222';
+
+            const centerX = width / 2;
+            const groundY = height / 2 + 120;
+            
+            // Ground
+            ctx.strokeStyle = darkGray;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY);
+            ctx.lineTo(width, groundY);
+            ctx.stroke();
+
+            // --- CONSTRAINED SUN ARC ---
+            sunT += sunSpeed * sunDirection;
+            if (sunT >= 1 || sunT <= 0) sunDirection *= -1;
+            
+            const startAngle = 0; 
+            const endAngle = 75; 
+            const currentDeg = startAngle + (endAngle - startAngle) * sunT;
+            const currentRad = (currentDeg * Math.PI) / 180;
+
+            const orbitRadius = 160; 
+            const panelX = centerX + 150;
+            const panelMountY = groundY - 40;
+            
+            const sunX = panelX + Math.cos(currentRad) * orbitRadius;
+            const sunY = panelMountY - Math.sin(currentRad) * orbitRadius;
+
+            // --- SOLAR BEAM EFFECT ---
+            ctx.save();
+            const beamGrad = ctx.createLinearGradient(sunX, sunY, panelX, panelMountY);
+            beamGrad.addColorStop(0, 'rgba(255, 255, 255, 0.08)');
+            beamGrad.addColorStop(1, 'rgba(255, 255, 255, 0.01)');
+            
+            ctx.fillStyle = beamGrad;
+            ctx.beginPath();
+            ctx.moveTo(sunX, sunY);
+            ctx.lineTo(panelX - 15, panelMountY);
+            ctx.lineTo(panelX + 15, panelMountY);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.setLineDash([4, 12]);
+            ctx.lineDashOffset = -Date.now() * 0.05; 
+            ctx.beginPath();
+            ctx.moveTo(sunX, sunY);
+            ctx.lineTo(panelX, panelMountY);
+            ctx.stroke();
+            ctx.restore();
+
+            // Draw Sun
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 18, 0, Math.PI * 2); 
+            ctx.strokeStyle = midGray;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.beginPath();
+            ctx.arc(sunX, sunY, 4, 0, Math.PI * 2);
+            ctx.fillStyle = midGray;
+            ctx.fill();
+
+            // --- 1. NUCLEAR COOLING TOWER ---
+            const nukeX = centerX - 300;
+            const nukeY = groundY;
+            const nukeWidth = 70;
+            const nukeHeight = 110;
+
+            if (Math.random() > 0.93) {
+                particles.push(new VoxelChunk(nukeX, nukeY - nukeHeight - 10));
+            }
+            
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+
+            ctx.strokeStyle = lightGray;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(nukeX - nukeWidth/2, nukeY);
+            ctx.bezierCurveTo(nukeX - nukeWidth/4, nukeY - nukeHeight/2, nukeX - nukeWidth/4, nukeY - nukeHeight/2, nukeX - nukeWidth/3, nukeY - nukeHeight);
+            ctx.lineTo(nukeX + nukeWidth/3, nukeY - nukeHeight);
+            ctx.bezierCurveTo(nukeX + nukeWidth/4, nukeY - nukeHeight/2, nukeX + nukeWidth/4, nukeY - nukeHeight/2, nukeX + nukeWidth/2, nukeY);
+            ctx.stroke();
+
+            // --- 2. WIND GENERATOR ---
+            const turbX = centerX - 120;
+            const turbY = groundY - 220;
+            const bladeLength = Math.min(width, height) * 0.22;
+
+            ctx.strokeStyle = lightGray;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(turbX - 4, groundY);
+            ctx.lineTo(turbX - 1, turbY);
+            ctx.lineTo(turbX + 1, turbY);
+            ctx.lineTo(turbX + 4, groundY);
+            ctx.stroke();
+
+            ctx.save();
+            ctx.translate(turbX, turbY);
+            ctx.rotate(rotation);
+            for (let i = 0; i < 3; i++) {
+                ctx.rotate((Math.PI * 2) / 3);
+                ctx.strokeStyle = white;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -bladeLength);
+                ctx.stroke();
+            }
+            ctx.restore();
+
+            ctx.fillStyle = white;
+            ctx.beginPath();
+            ctx.arc(turbX, turbY, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // --- 3. SOLAR PANEL ---
+            const panelWidth = 60;
+
+            ctx.strokeStyle = midGray;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(panelX, groundY);
+            ctx.lineTo(panelX, panelMountY);
+            ctx.stroke();
+
+            const targetAngle = Math.atan2(sunY - panelMountY, sunX - panelX);
+            ctx.save();
+            ctx.translate(panelX, panelMountY);
+            ctx.rotate(targetAngle + Math.PI/2); 
+            ctx.strokeStyle = white;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(-panelWidth/2, 0);
+            ctx.lineTo(panelWidth/2, 0);
+            ctx.stroke();
+            ctx.restore();
+
+            // Energy update
+            rotation += turbineSpeed;
+            turbineSpeed += (targetTurbineSpeed - turbineSpeed) * 0.02;
+            
+            const solarContribution = 0.07 * (currentDeg / 75); 
+            const turbineContribution = turbineSpeed * 0.15;
+            const nukeContribution = 0.08; 
+            
+            totalEnergy += (turbineContribution + solarContribution + nukeContribution);
+
+            if (Math.random() > 0.99) {
+                targetTurbineSpeed = 0.01 + Math.random() * 0.04;
+            }
+
+            const currentChargePercent = (totalEnergy * 5) % 100;
+
+            energyDisplay.innerText = totalEnergy.toFixed(2).padStart(7, '0');
+            battPercentDisplay.innerText = Math.floor(currentChargePercent).toString().padStart(3, '0') + '%';
+            statusBar.style.width = currentChargePercent + '%';
+            updateBatteryUI(currentChargePercent);
+
+            requestAnimationFrame(drawElements);
+        }
+
+        window.onload = drawElements;
+
+        const accelerate = () => targetTurbineSpeed = 0.15;
+        const decelerate = () => targetTurbineSpeed = 0.015;
+
+        window.addEventListener('mousedown', accelerate);
+        window.addEventListener('mouseup', decelerate);
+        window.addEventListener('touchstart', accelerate);
+        window.addEventListener('touchend', decelerate);
+    </script>
+</body>
+</html>
