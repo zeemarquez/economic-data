@@ -1,194 +1,257 @@
 {
-  "total_spending": 450721542520,
+  "total_spending": {
+    "estatal": 384264292030,
+    "ccaa": 66457250488,
+    "municipal": 0
+  },
   "spending_items": [
     {
-      "name": "Comercio, turismo y PYMES",
-      "amount": 1669306400,
-      "category": "Actuaciones de carácter económico",
-      "label": "Comercio y turismo",
-      "description": "Apoyo a empresas, comercio y sector turístico."
+      "name": "Pensiones",
+      "amount": 190684246150,
+      "category": "Protección social",
+      "label": "Pensiones",
+      "description": "Pensiones. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Otras actuaciones de carácter económico",
-      "amount": 1448441470,
-      "category": "Actuaciones de carácter económico",
-      "label": "Otras económicas",
-      "description": "Resto de políticas de carácter económico."
+      "name": "Sanidad - CCAA",
+      "amount": 34026112250,
+      "category": "Bienes públicos de carácter preferente",
+      "label": "Sanidad",
+      "description": "Sanidad gestionada por comunidades autónomas: hospitales, atención primaria, salud pública.",
+      "administracion": "ccaa"
     },
     {
-      "name": "Industria y energía",
-      "amount": 9002384560,
-      "category": "Actuaciones de carácter económico",
-      "label": "Industria y energía",
-      "description": "Fomento industrial y transición energética."
+      "name": "Deuda pública",
+      "amount": 31275104090,
+      "category": "Servicios públicos generales",
+      "label": "Deuda pública",
+      "description": "Deuda pública. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Otras prestaciones económicas",
+      "amount": 22299229990,
+      "category": "Protección social",
+      "label": "Otras prestaciones económicas",
+      "description": "Otras prestaciones económicas. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Educación - CCAA",
+      "amount": 21532149158,
+      "category": "Bienes públicos de carácter preferente",
+      "label": "Educación",
+      "description": "Educación gestionada por CCAA: infantil, primaria, secundaria, formación profesional.",
+      "administracion": "ccaa"
+    },
+    {
+      "name": "Desempleo",
+      "amount": 21277384680,
+      "category": "Protección social",
+      "label": "Desempleo",
+      "description": "Desempleo. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Defensa",
+      "amount": 12313865490,
+      "category": "Seguridad y defensa",
+      "label": "Defensa",
+      "description": "Defensa. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
       "name": "Infraestructuras",
       "amount": 10869598590,
       "category": "Actuaciones de carácter económico",
       "label": "Infraestructuras",
-      "description": "Obras públicas, transporte y redes."
+      "description": "Infraestructuras. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Seguridad ciudadana e instituciones penitenciarias",
+      "amount": 10718220830,
+      "category": "Seguridad y defensa",
+      "label": "Seguridad ciudadana e instituciones penitenciarias",
+      "description": "Seguridad ciudadana e instituciones penitenciarias. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
       "name": "Investigación, desarrollo e innovación",
       "amount": 10449244870,
       "category": "Actuaciones de carácter económico",
-      "label": "I+D+i",
-      "description": "Investigación científica e innovación."
+      "label": "Investigación, desarrollo e innovación",
+      "description": "Investigación, desarrollo e innovación. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Subvenciones al transporte",
-      "amount": 3447680300,
+      "name": "Servicios de carácter general",
+      "amount": 9657929040,
+      "category": "Servicios públicos generales",
+      "label": "Servicios de carácter general",
+      "description": "Servicios de carácter general. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Industria y energía",
+      "amount": 9002384560,
       "category": "Actuaciones de carácter económico",
-      "label": "Subvenciones transporte",
-      "description": "Ayudas al transporte de viajeros y mercancías."
+      "label": "Industria y energía",
+      "description": "Industria y energía. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
       "name": "Agricultura, pesca y alimentación",
       "amount": 8511340860,
+      "category": "Bienes públicos de carácter preferente",
+      "label": "Agricultura, pesca y alimentación",
+      "description": "Agricultura, pesca y alimentación. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Fomento del empleo",
+      "amount": 8028626590,
       "category": "Actuaciones de carácter económico",
-      "label": "Agricultura y pesca",
-      "description": "Política agraria, pesquera y alimentaria."
+      "label": "Fomento del empleo",
+      "description": "Fomento del empleo. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Seguridad ciudadana e instituciones penitenciarias",
-      "amount": 10718220830,
-      "category": "Servicios públicos básicos",
-      "label": "Seguridad y prisiones",
-      "description": "Policía, protección civil y centros penitenciarios."
-    },
-    {
-      "name": "Justicia",
-      "amount": 2290664780,
-      "category": "Servicios públicos básicos",
-      "label": "Justicia",
-      "description": "Administración de justicia y tribunales."
-    },
-    {
-      "name": "Política exterior",
-      "amount": 2190349640,
-      "category": "Servicios públicos básicos",
-      "label": "Política exterior",
-      "description": "Relaciones internacionales y cooperación."
-    },
-    {
-      "name": "Defensa",
-      "amount": 12313865490,
-      "category": "Servicios públicos básicos",
-      "label": "Defensa",
-      "description": "Fuerzas Armadas y política de defensa."
+      "name": "Servicios sociales y promoción social",
+      "amount": 7113834680,
+      "category": "Protección social",
+      "label": "Servicios sociales y promoción social",
+      "description": "Servicios sociales y promoción social. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
       "name": "Sanidad",
       "amount": 7048459800,
       "category": "Bienes públicos de carácter preferente",
       "label": "Sanidad",
-      "description": "Sanidad pública y salud."
+      "description": "Sanidad. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Cultura",
-      "amount": 1790724860,
-      "category": "Bienes públicos de carácter preferente",
-      "label": "Cultura",
-      "description": "Patrimonio, arte y actividades culturales."
+      "name": "Servicios sociales - CCAA",
+      "amount": 6512810548,
+      "category": "Protección social",
+      "label": "Servicios sociales y promoción social",
+      "description": "Servicios sociales y atención a dependencia gestionados por CCAA.",
+      "administracion": "ccaa"
     },
     {
       "name": "Educación",
       "amount": 4922745740,
       "category": "Bienes públicos de carácter preferente",
       "label": "Educación",
-      "description": "Enseñanza y formación."
+      "description": "Educación. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Servicios sociales y promoción social",
-      "amount": 7113834680,
-      "category": "Protección y promoción social",
-      "label": "Servicios sociales",
-      "description": "Atención a dependencia y exclusión social."
+      "name": "Subvenciones al transporte",
+      "amount": 3447680300,
+      "category": "Actuaciones de carácter económico",
+      "label": "Subvenciones al transporte",
+      "description": "Subvenciones al transporte. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Otras prestaciones económicas",
-      "amount": 22299229990,
-      "category": "Protección y promoción social",
-      "label": "Otras prestaciones",
-      "description": "Prestaciones sociales diversas."
-    },
-    {
-      "name": "Acceso a la vivienda y fomento de la edificación",
-      "amount": 2116835650,
-      "category": "Protección y promoción social",
-      "label": "Vivienda",
-      "description": "Política de vivienda y fomento de la edificación."
-    },
-    {
-      "name": "Pensiones",
-      "amount": 190684246150,
-      "category": "Protección y promoción social",
-      "label": "Pensiones",
-      "description": "Pensiones contributivas y no contributivas."
+      "name": "Justicia",
+      "amount": 2290664780,
+      "category": "Seguridad y defensa",
+      "label": "Justicia",
+      "description": "Justicia. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
       "name": "Gestión y administración de la Seguridad Social",
       "amount": 2259255210,
-      "category": "Protección y promoción social",
-      "label": "Gestión Seguridad Social",
-      "description": "Administración y gestión del sistema de la Seguridad Social."
+      "category": "Seguridad y defensa",
+      "label": "Gestión y administración de la Seguridad Social",
+      "description": "Gestión y administración de la Seguridad Social. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Fomento del empleo",
-      "amount": 8028626590,
-      "category": "Protección y promoción social",
-      "label": "Fomento empleo",
-      "description": "Políticas activas de empleo y formación."
+      "name": "Infraestructuras - CCAA",
+      "amount": 2193089266,
+      "category": "Actuaciones de carácter económico",
+      "label": "Infraestructuras",
+      "description": "Servicios sociales y atención a dependencia gestionados por CCAA.",
+      "administracion": "ccaa"
     },
     {
-      "name": "Desempleo",
-      "amount": 21277384680,
-      "category": "Protección y promoción social",
-      "label": "Desempleo",
-      "description": "Prestaciones por desempleo."
+      "name": "Otras políticas - CCAA",
+      "amount": 2193089266,
+      "category": "Servicios públicos generales",
+      "label": "Otras políticas autonómicas",
+      "description": "Otras políticas y servicios gestionados por comunidades autónomas.",
+      "administracion": "ccaa"
     },
     {
-      "name": "Gestión y administración de Trabajo y Economía Social",
-      "amount": 193403510,
-      "category": "Protección y promoción social",
-      "label": "Trabajo y economía social",
-      "description": "Inspección de trabajo y apoyo a la economía social."
+      "name": "Política exterior",
+      "amount": 2190349640,
+      "category": "Servicios públicos generales",
+      "label": "Política exterior",
+      "description": "Política exterior. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Alta dirección",
-      "amount": 932674510,
-      "category": "Actuaciones de carácter general",
-      "label": "Alta dirección",
-      "description": "Órganos de gobierno y dirección del Estado."
+      "name": "Acceso a la vivienda y fomento de la edificación",
+      "amount": 2116835650,
+      "category": "Bienes públicos de carácter preferente",
+      "label": "Acceso a la vivienda y fomento de la edificación",
+      "description": "Acceso a la vivienda y fomento de la edificación. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Servicios de carácter general",
-      "amount": 9657929040,
-      "category": "Actuaciones de carácter general",
-      "label": "Servicios generales",
-      "description": "Servicios comunes de la Administración."
+      "name": "Cultura",
+      "amount": 1790724860,
+      "category": "Bienes públicos de carácter preferente",
+      "label": "Cultura",
+      "description": "Cultura. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
       "name": "Administración financiera y tributaria",
       "amount": 1752739740,
-      "category": "Actuaciones de carácter general",
-      "label": "Hacienda y tributos",
-      "description": "Gestión tributaria y administración financiera."
+      "category": "Servicios públicos generales",
+      "label": "Administración financiera y tributaria",
+      "description": "Administración financiera y tributaria. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Transferencias a otras admones. públicas",
-      "amount": 66457250490,
-      "category": "Actuaciones de carácter general",
-      "label": "Transferencias CCAA y entes",
-      "description": "Transferencias a comunidades autónomas y otras administraciones."
+      "name": "Comercio, turismo y PYMES",
+      "amount": 1669306400,
+      "category": "Actuaciones de carácter económico",
+      "label": "Comercio, turismo y PYMES",
+      "description": "Comercio, turismo y PYMES. Gasto estatal.",
+      "administracion": "estatal"
     },
     {
-      "name": "Deuda pública",
-      "amount": 31275104090,
-      "category": "Actuaciones de carácter general",
-      "label": "Deuda pública",
-      "description": "Intereses y gestión de la deuda del Estado."
+      "name": "Otras actuaciones de carácter económico",
+      "amount": 1448441470,
+      "category": "Otras actuaciones",
+      "label": "Otras actuaciones de carácter económico",
+      "description": "Otras actuaciones de carácter económico. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Alta dirección",
+      "amount": 932674510,
+      "category": "Servicios públicos generales",
+      "label": "Alta dirección",
+      "description": "Alta dirección. Gasto estatal.",
+      "administracion": "estatal"
+    },
+    {
+      "name": "Gestión y administración de Trabajo y Economía Social",
+      "amount": 193403510,
+      "category": "Servicios públicos generales",
+      "label": "Gestión y administración de Trabajo y Economía Social",
+      "description": "Gestión y administración de Trabajo y Economía Social. Gasto estatal.",
+      "administracion": "estatal"
     }
   ]
 }

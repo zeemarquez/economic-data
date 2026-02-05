@@ -116,10 +116,12 @@ export interface SpendingItem {
   category: string;
   label: string;
   description: string;
+  /** Administración que gestiona la partida: estatal, ccaa, municipal. */
+  administracion?: string;
 }
 
 /** State spending data: total and flat list of items (reusable for any country/year). */
 export interface SpendingData {
-  total_spending: number;
+  total_spending: number | { estatal: number; ccaa: number; municipal: number };
   spending_items: SpendingItem[];
 }

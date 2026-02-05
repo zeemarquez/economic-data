@@ -1,75 +1,110 @@
 {
-    "total_ingresos": 389063220790,
-    "ingresos_items": [
-      {
-        "name": "Impuesto sobre la Renta de las Personas Físicas (IRPF)",
-        "amount": 113123280000,
-        "category": "Impuestos directos y cotizaciones sociales",
-        "label": "IRPF",
-        "description": "Gravamen sobre la renta de los residentes en España durante el año natural."
-      },
-      {
-        "name": "Impuesto sobre el Valor Añadido (IVA)",
-        "amount": 82595080000,
-        "category": "Impuestos indirectos",
-        "label": "IVA",
-        "description": "Impuesto sobre el consumo cargado sobre la entrega de bienes y prestaciones de servicios."
-      },
-      {
-        "name": "Impuesto sobre Sociedades",
-        "amount": 28519000000,
-        "category": "Impuestos directos y cotizaciones sociales",
-        "label": "Sociedades",
-        "description": "Tributo que grava la renta de las sociedades y demás entidades jurídicas."
-      },
-      {
-        "name": "Impuestos Especiales",
-        "amount": 22287410000,
-        "category": "Impuestos indirectos",
-        "label": "II.EE.",
-        "description": "Gravámenes sobre consumos específicos como alcohol, tabaco e hidrocarburos."
-      },
-      {
-        "name": "Tasas, precios públicos y otros ingresos",
-        "amount": 2684530510,
-        "category": "Tasas y otros ingresos",
-        "label": "Tasas",
-        "description": "Ingresos por prestación de servicios públicos o actividades en régimen de derecho público."
-      },
-      {
-        "name": "Impuesto sobre las Primas de Seguros",
-        "amount": 2429434130,
-        "category": "Impuestos indirectos",
-        "label": "Seguros",
-        "description": "Gravamen sobre las operaciones de seguros y capitalización."
-      },
-      {
-        "name": "Transferencias Corrientes",
-        "amount": 19564230450,
-        "category": "Transferencias corrientes",
-        "label": "Transferencias",
-        "description": "Ingresos recibidos de otras entidades sin contrapartida directa para financiar gastos corrientes."
-      },
-      {
-        "name": "Pasivos Financieros",
-        "amount": 110540251070,
-        "category": "Operaciones financieras",
-        "label": "Deuda Pública",
-        "description": "Ingresos derivados de la emisión de deuda y préstamos recibidos por el Estado."
-      },
-      {
-        "name": "Ingresos Patrimoniales",
-        "amount": 5420004620,
-        "category": "Ingresos patrimoniales",
-        "label": "Patrimonio",
-        "description": "Rentas derivadas de activos propiedad del Estado, como dividendos e intereses."
-      },
-      {
-        "name": "Impuesto sobre Transacciones Financieras",
-        "amount": 335000000,
-        "category": "Otros impuestos indirectos",
-        "label": "Tasa Tobin",
-        "description": "Gravamen sobre la adquisición de acciones de empresas cotizadas."
-      }
-    ]
-  }
+  "total_ingresos": 397165e6,
+  "ingresos_items": [
+    {
+      "name": "Impuesto sobre la Renta de las Personas Físicas",
+      "amount": 107000e6,
+      "category": "Impuestos directos",
+      "label": "IRPF",
+      "description": "Gravamen sobre la renta de los residentes en España durante el año natural. Incluye rentas del trabajo (principal componente con el 80% del total), capital, actividades económicas y ganancias patrimoniales. El crecimiento en 2023 se explica por la creación de empleo y el aumento salarial nominal."
+    },
+    {
+      "name": "Cotizaciones Sociales a la Seguridad Social",
+      "amount": 137000e6,
+      "category": "Cotizaciones sociales",
+      "label": "Cotizaciones SS",
+      "description": "Aportaciones de trabajadores y empresas para financiar las prestaciones del sistema: pensiones (80% del gasto), desempleo, incapacidad temporal y otras prestaciones sociales. Tipos de cotización 2023: 28,3% para contingencias comunes + 0,6% MEI."
+    },
+    {
+      "name": "Impuesto sobre el Valor Añadido",
+      "amount": 74500e6,
+      "category": "Impuestos indirectos",
+      "label": "IVA",
+      "description": "Impuesto que grava el consumo de bienes y servicios. Tipos: general (21%), reducido (10%), superreducido (4%) y superreducido especial (0% para alimentos básicos en 2023). Representa el 30,8% de los impuestos y el 18,8% del total de ingresos consolidados."
+    },
+    {
+      "name": "Impuesto sobre Sociedades",
+      "amount": 31100e6,
+      "category": "Impuestos directos",
+      "label": "IS",
+      "description": "Gravamen sobre los beneficios de sociedades mercantiles y demás entidades jurídicas. Tipo general del 25%, con tipos reducidos para pymes (15% primeros 300.000€ de base) y entidades de nueva creación. El crecimiento refleja la mejora de márgenes empresariales."
+    },
+    {
+      "name": "Impuestos Especiales",
+      "amount": 18400e6,
+      "category": "Impuestos indirectos",
+      "label": "II.EE.",
+      "description": "Gravan productos específicos: hidrocarburos (11.000 M€), labores del tabaco (7.000 M€), bebidas alcohólicas (1.200 M€), electricidad (800 M€) y envases de plástico no reutilizables (591 M€ en su primer año). Total 2023: 20.757 M€."
+    },
+    {
+      "name": "Transferencias corrientes",
+      "amount": 8500e6,
+      "category": "Otros ingresos",
+      "label": "Transferencias",
+      "description": "Fondos recibidos de la Unión Europea para operaciones corrientes y transferencias entre administraciones públicas (Estado, CCAA, Entidades Locales). Incluye fondos de cohesión y políticas comunitarias."
+    },
+    {
+      "name": "Transferencias de capital",
+      "amount": 6000e6,
+      "category": "Operaciones de capital",
+      "label": "Transf. capital",
+      "description": "Fondos europeos del Plan de Recuperación, Transformación y Resiliencia (PRTR - Next Generation EU) y otras transferencias para inversión pública. En 2023 se recibieron 25.155 M€ del PRTR incluidos en los PGE."
+    },
+    {
+      "name": "Tasas, precios públicos y otros ingresos",
+      "amount": 4500e6,
+      "category": "Otros ingresos",
+      "label": "Tasas",
+      "description": "Contraprestaciones por servicios públicos y uso de bienes de dominio público: tasas judiciales, académicas, aeroportuarias, portuarias, telecomunicaciones, agua, residuos y otros servicios administrativos."
+    },
+    {
+      "name": "Impuesto sobre Sucesiones y Donaciones",
+      "amount": 3400e6,
+      "category": "Impuestos directos",
+      "label": "ISD",
+      "description": "Impuesto cedido a las Comunidades Autónomas que grava las transmisiones gratuitas de bienes y derechos por herencia o donación. Gran disparidad territorial por las bonificaciones autonómicas."
+    },
+    {
+      "name": "Ingresos patrimoniales",
+      "amount": 2800e6,
+      "category": "Otros ingresos",
+      "label": "Patrimoniales",
+      "description": "Rentas de la propiedad, dividendos de empresas públicas (Loterías del Estado, AENA, Puertos del Estado), intereses de activos financieros y otros rendimientos del patrimonio público."
+    },
+    {
+      "name": "Otros impuestos indirectos",
+      "amount": 1800e6,
+      "category": "Impuestos indirectos",
+      "label": "Otros indirectos",
+      "description": "Impuestos sobre Transmisiones Patrimoniales y Actos Jurídicos Documentados (ITP-AJD), gravámenes sobre el juego, tráfico exterior y otros impuestos indirectos menores gestionados por CCAA y Entidades Locales."
+    },
+    {
+      "name": "Impuesto sobre el Patrimonio",
+      "amount": 1200e6,
+      "category": "Impuestos directos",
+      "label": "IP",
+      "description": "Gravamen sobre el patrimonio neto superior a 700.000€ (con mínimo exento de vivienda habitual de 300.000€). Gestionado por las CCAA, que pueden establecer bonificaciones. Dato 2023: 1.364 M€ recaudados por AEAT."
+    },
+    {
+      "name": "Impuesto sobre Bienes Inmuebles y otros locales",
+      "amount": 900e6,
+      "category": "Impuestos directos",
+      "label": "IBI y otros",
+      "description": "Principales impuestos locales: Impuesto sobre Bienes Inmuebles (IBI), Impuesto sobre Actividades Económicas (IAE), Impuesto sobre Vehículos de Tracción Mecánica (IVTM) y otros tributos municipales."
+    },
+    {
+      "name": "Enajenación de inversiones reales",
+      "amount": 350e6,
+      "category": "Operaciones de capital",
+      "label": "Enajenaciones",
+      "description": "Ingresos por venta de terrenos, edificios, infraestructuras y otras inversiones reales del sector público. Operaciones de capital no recurrentes."
+    },
+    {
+      "name": "Otros ingresos y reintegros",
+      "amount": 1715e6,
+      "category": "Otros ingresos",
+      "label": "Otros",
+      "description": "Reintegros de presupuestos cerrados, ingresos diversos no clasificados en otras categorías, ajustes contables y otros ingresos no financieros consolidados."
+    }
+  ]
+}
