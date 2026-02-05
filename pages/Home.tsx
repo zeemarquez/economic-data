@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
-import { Calculator, Percent, PieChart, Zap } from 'lucide-react';
+import { Calculator, Percent, PieChart, Zap, ChevronDown } from 'lucide-react';
 
 const PAGES = [
   {
@@ -31,18 +31,49 @@ const PAGES = [
 ];
 
 export default function Home() {
-  return (
-    <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
-      <header className="w-full max-w-2xl mb-16 flex flex-col items-center text-center border-b border-white/5 pb-8">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-2 font-mono">
-          ECONOMIC<span className="text-neutral-500">DATA</span>
-        </h1>
-        <p className="text-neutral-500 font-mono text-sm uppercase tracking-widest">
-          Herramientas de cálculo
-        </p>
-      </header>
+  const [showScrollHint, setShowScrollHint] = useState(true);
 
-      <main className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-6">
+  useEffect(() => {
+    const checkScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      const threshold = 60;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - threshold;
+      setShowScrollHint(!atBottom);
+    };
+
+    checkScroll();
+    window.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      window.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen relative">
+      {/* Background: retro stock terminal, dimmed */}
+      <div
+        className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
+        aria-hidden
+      >
+        <iframe
+          src="/animations/retro_stock_terminal.html"
+          title="Retro Stock Terminal (background)"
+          className="absolute inset-0 w-full h-full border-0 scale-105"
+          style={{ filter: 'brightness(0.25)' }}
+        />
+      </div>
+
+      {/* Foreground content */}
+      <div className="relative z-10 min-h-screen p-4 md:p-8 flex flex-col items-center">
+        <header className="w-full max-w-2xl mb-24 sm:mb-20 md:mb-16 flex flex-col items-center text-center border-b border-white/5 pb-8">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tighter text-white mb-2 font-mono">
+            ECONOMIC<span className="text-neutral-500">DATA</span>
+          </h1>
+        </header>
+
+        <main className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8 md:mt-0">
         {PAGES.map((page) => (
           <Link
             key={page.path}
@@ -60,9 +91,27 @@ export default function Home() {
             </Card>
           </Link>
         ))}
-      </main>
+        </main>
 
-      <footer className="w-full max-w-2xl mt-16 border-t border-white/5 pt-6 text-center text-neutral-600 text-xs font-mono" />
+        <footer className="w-full max-w-2xl mt-16 border-t border-white/5 pt-6 text-center text-neutral-600 text-xs font-mono" />
+      </div>
+
+      {/* Pulsating scroll-down hint when not at bottom (mobile / tall content) */}
+      {showScrollHint && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-1"
+          aria-hidden
+        >
+          <span className="text-neutral-500 text-[10px] font-mono uppercase tracking-widest">
+            Scroll
+          </span>
+          <ChevronDown
+            size={28}
+            className="text-white/70 animate-pulse"
+            strokeWidth={2.5}
+          />
+        </div>
+      )}
     </div>
   );
 }
