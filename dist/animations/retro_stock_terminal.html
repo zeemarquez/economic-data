@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monochrome Retro-Terminal v1.2</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --fg-primary: #ffffff;
+            --fg-secondary: #cccccc;
+            --mid-tones: #444444;
+            --dark-accents: #222222;
+            --glow: rgba(255, 255, 255, 0.2);
+            --font-main: 'Courier New', Courier, monospace;
+            --scanline-opacity: 0.15;
+        }
+
+        * {
+            box-sizing: border-box;
+            cursor: default; /* Retro terminals didn't have pointers */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--fg-primary);
+            font-family: var(--font-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 12px;
+            -webkit-font-smoothing: none; /* Sharper pixel look */
+        }
+
+        /* --- LAYOUT GRID --- */
+        .terminal-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            grid-template-rows: 100px 1fr 200px 40px;
+            height: 100%;
+            width: 100%;
+            padding: 20px;
+            gap: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* BORDERS & PANELS */
+        .panel {
+            border: 1.5px solid var(--fg-primary);
+            padding: 10px;
+            position: relative;
+            background: rgba(10, 10, 10, 0.9);
+            box-shadow: 0 0 10px var(--glow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: var(--fg-primary);
+            color: var(--bg-color);
+            padding: 2px 5px;
+            font-weight: bold;
+            font-size: 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            min-width: 100px;
+        }
+
+        /* --- CRT EFFECTS OVERLAY --- */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        /* Scanlines */
+        .crt-overlay::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.4) 50%
+            );
+            background-size: 100% 4px; /* 3px density approx */
+            z-index: 2;
+        }
+
+        /* Vignette */
+        .crt-overlay::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: radial-gradient(circle, rgba(0,0,0,0) 60%, rgba(0,0,0,0.6) 100%);
+            z-index: 2;
+        }
+
+        /* Flicker Animation */
+        @keyframes textShadow {
+            0% { text-shadow: 0.4389924193300864px 0 1px rgba(255,255,255,0.1); }
+            5% { text-shadow: 2.7928974010788217px 0 1px rgba(255,255,255,0.1); }
+            10% { text-shadow: 0.02956275843481219px 0 1px rgba(255,255,255,0.1); }
+            15% { text-shadow: 0.40218538552878136px 0 1px rgba(255,255,255,0.1); }
+            20% { text-shadow: 3.4794037899852017px 0 1px rgba(255,255,255,0.1); }
+            25% { text-shadow: 1.6125630401149584px 0 1px rgba(255,255,255,0.1); }
+            30% { text-shadow: 0.7015590085143956px 0 1px rgba(255,255,255,0.1); }
+            35% { text-shadow: 3.896914047650351px 0 1px rgba(255,255,255,0.1); }
+            40% { text-shadow: 3.870905614848819px 0 1px rgba(255,255,255,0.1); }
+            45% { text-shadow: 2.231056963361899px 0 1px rgba(255,255,255,0.1); }
+            50% { text-shadow: 0.08084290417898504px 0 1px rgba(255,255,255,0.1); }
+            55% { text-shadow: 2.3758461067427543px 0 1px rgba(255,255,255,0.1); }
+            60% { text-shadow: 2.202193051050636px 0 1px rgba(255,255,255,0.1); }
+            65% { text-shadow: 2.8638780614874975px 0 1px rgba(255,255,255,0.1); }
+            70% { text-shadow: 0.48874025155497314px 0 1px rgba(255,255,255,0.1); }
+            75% { text-shadow: 1.8948491305757957px 0 1px rgba(255,255,255,0.1); }
+            80% { text-shadow: 0.0833037308038857px 0 1px rgba(255,255,255,0.1); }
+            85% { text-shadow: 0.09769827255241735px 0 1px rgba(255,255,255,0.1); }
+            90% { text-shadow: 3.443339761481782px 0 1px rgba(255,255,255,0.1); }
+            95% { text-shadow: 2.1841838852799786px 0 1px rgba(255,255,255,0.1); }
+            100% { text-shadow: 2.6208764473832513px 0 1px rgba(255,255,255,0.1); }
+        }
+
+        .crt-flicker {
+            animation: textShadow 2.5s infinite;
+            opacity: 0.95;
+        }
+
+        /* --- SPECIFIC MODULES --- */
+        
+        /* Header - taller so overlay title (EconomicData) has room */
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--fg-primary);
+            padding: 0 10px;
+            min-height: 100px;
+            background: var(--dark-accents);
+        }
+        
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Stock Table */
+        .stock-list {
+            grid-column: 1 / 2;
+            grid-row: 2 / 4;
+            overflow: hidden;
+        }
+        .stock-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed var(--mid-tones);
+        }
+        .stock-row span:last-child {
+            color: var(--fg-secondary);
+        }
+
+        /* Main Chart Area */
+        .main-chart-container {
+            grid-column: 2 / 3;
+            grid-row: 2 / 3;
+            position: relative;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+        }
+        canvas#mainChart {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* KPI/Voxel Box */
+        .kpi-box {
+            grid-column: 3 / 4;
+            grid-row: 2 / 3;
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+        }
+        .kpi-val {
+            font-size: 2rem;
+            margin-top: 10px;
+        }
+        .voxel-container {
+            border: 1px solid var(--mid-tones);
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+        canvas#globeCanvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated; 
+        }
+
+        /* Log / Console */
+        .console-log {
+            grid-column: 2 / 4;
+            grid-row: 3 / 4;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--fg-secondary);
+            overflow: hidden;
+        }
+        .log-entry::before {
+            content: "> ";
+            color: var(--fg-primary);
+        }
+
+        /* Ticker Footer */
+        .footer-ticker {
+            grid-column: 1 / -1;
+            grid-row: 4 / 5;
+            background: var(--fg-primary);
+            color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: ticker 20s linear infinite;
+            font-weight: bold;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .terminal-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: 100px 200px 1fr 100px 40px;
+                overflow-y: auto;
+            }
+            .header span { display: none; }
+            .main-chart-container { grid-column: 1 / -1; grid-row: 2 / 3; }
+            .stock-list { grid-column: 1 / -1; grid-row: 3 / 4; height: 150px;}
+            .kpi-box { grid-column: 1 / -1; grid-row: 4 / 5; }
+            .console-log { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+
+    <div class="terminal-grid crt-flicker">
+        <!-- Header -->
+        <div class="header">
+            <span>SYS.MONITOR_V1.2</span>
+            <span id="clock">00:00:00 UTC</span>
+        </div>
+
+        <!-- Sidebar: Stock List -->
+        <div class="panel stock-list" id="stockPanel">
+            <div class="panel-header">MKT.INDICES</div>
+            <div style="margin-top: 20px;" id="stockContainer">
+                <!-- JS populated -->
+            </div>
+        </div>
+
+        <!-- Main Content: Chart -->
+        <div class="panel main-chart-container">
+            <div class="panel-header">ECONOMIC.VELOCITY [X-24]</div>
+            <canvas id="mainChart"></canvas>
+        </div>
+
+        <!-- Right: KPIs & Voxels -->
+        <div class="kpi-box">
+            <div class="panel">
+                <div class="panel-header">VOLATILITY</div>
+                <div style="padding-top: 20px;">
+                    <div style="font-size: 9px; color: var(--fg-secondary);">CURRENT INDEX</div>
+                    <div class="kpi-val" id="volatilityVal">84.2%</div>
+                    <div style="width: 100%; height: 4px; background: #333; margin-top: 10px;">
+                        <div id="volBar" style="width: 84%; height: 100%; background: #fff;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">GLOBAL.COVERAGE</div>
+                <div class="voxel-container">
+                    <canvas id="globeCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom: System Log -->
+        <div class="panel console-log">
+            <div class="panel-header">SYS.LOG</div>
+            <div id="logContainer" style="margin-top: 15px; display: flex; flex-direction: column-reverse;">
+                <!-- Logs go here -->
+            </div>
+        </div>
+
+        <!-- Footer: Ticker -->
+        <div class="footer-ticker">
+            <div class="ticker-content">
+                BTC/USD 94,320 ▲  |  ETH/USD 3,210 ▲  |  XAU/GLD 2,100 ▼  |  CRUDE 76.50 ▲  |  NASDAQ 18,400 ▲  |  S&P500 5,200 ▲  |  YIELD 10Y 4.2% ▼  |  USD/JPY 150.2 ▲  |  SYSTEM STABLE  |  DATA STREAM ACTIVE
+            </div>
+        </div>
+    </div>
+
+<script>
+    /**
+     * CONFIGURATION & UTILS
+     */
+    const config = {
+        colors: {
+            bg: '#0a0a0a',
+            primary: '#ffffff',
+            secondary: '#cccccc',
+            mid: '#444444'
+        },
+        physics: {
+            smoothing: 0.08, // Higher = smoother curves
+        }
+    };
+
+    function random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function formatTime() {
+        const now = new Date();
+        return now.toISOString().split('T')[1].split('.')[0] + " UTC";
+    }
+
+    /**
+     * CHART ENGINE
+     * Implements Retro Candle Charts
+     */
+    class RetroChart {
+        constructor(canvasId) {
+            this.canvas = document.getElementById(canvasId);
+            this.ctx = this.canvas.getContext('2d');
+            this.dataPoints = [];
+            this.maxPoints = 40; // Fewer points for candles to make them visible
+            this.resize();
+            
+            // Initial data generation
+            let prevClose = 50;
+            for(let i=0; i<this.maxPoints; i++) {
+                let open = prevClose;
+                // High volatility: Wider random range (-10 to 10.5)
+                let close = open + random(-10, 10.5); 
+                
+                // Clamp values
+                close = Math.max(10, Math.min(90, close));
+                
+                let high = Math.max(open, close) + random(0, 12);
+                let low = Math.min(open, close) - random(0, 12);
+                
+                this.dataPoints.push({o: open, h: high, l: low, c: close});
+                prevClose = close;
+            }
+
+            window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+            this.canvas.width = this.canvas.parentElement.clientWidth;
+            this.canvas.height = this.canvas.parentElement.clientHeight;
+        }
+
+        update() {
+            // Shift data
+            this.dataPoints.shift();
+            let last = this.dataPoints[this.dataPoints.length - 1];
+            
+            let open = last.c;
+            // High volatility update
+            let close = open + random(-12, 12);
+            
+            // Boundary checks with bounce back
+            if(close > 90) close -= 8;
+            if(close < 10) close += 8;
+            
+            let high = Math.max(open, close) + random(0, 8);
+            let low = Math.min(open, close) - random(0, 8);
+            
+            this.dataPoints.push({o: open, h: high, l: low, c: close});
+        }
+
+        draw() {
+            const w = this.canvas.width;
+            const h = this.canvas.height;
+            const ctx = this.ctx;
+
+            // Clear
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Grid (Dashed pattern [5,5])
+            ctx.strokeStyle = '#222';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            
+            // Horizontal grid
+            for(let i=0; i<h; i+=40) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(w, i);
+                ctx.stroke();
+            }
+            // Vertical grid
+            for(let i=0; i<w; i+=40) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, h);
+                ctx.stroke();
+            }
+
+            // Draw Candles
+            ctx.setLineDash([]); 
+            
+            const barWidth = (w / this.maxPoints) * 0.7;
+            const step = w / this.maxPoints;
+
+            this.dataPoints.forEach((pt, i) => {
+                const xCenter = i * step + (step / 2);
+                
+                // Map 0-100 values to height
+                const yHigh = h - (pt.h / 100 * h);
+                const yLow = h - (pt.l / 100 * h);
+                const yOpen = h - (pt.o / 100 * h);
+                const yClose = h - (pt.c / 100 * h);
+
+                const isBullish = pt.c >= pt.o;
+                
+                ctx.strokeStyle = config.colors.primary;
+                ctx.fillStyle = config.colors.primary;
+                ctx.lineWidth = 1.5;
+
+                // 1. Draw Wick (High to Low)
+                ctx.beginPath();
+                ctx.moveTo(xCenter, yHigh);
+                ctx.lineTo(xCenter, yLow);
+                ctx.stroke();
+
+                // 2. Draw Body
+                const bodyTop = Math.min(yOpen, yClose);
+                const bodyHeight = Math.abs(yClose - yOpen);
+                const rectH = Math.max(1, bodyHeight); // Ensure at least 1px visible
+
+                if (isBullish) {
+                    // Bullish: Filled Rectangle
+                    ctx.fillRect(xCenter - barWidth/2, bodyTop, barWidth, rectH);
+                } else {
+                    // Bearish: Hollow Rectangle
+                    // Fill with black first to hide the wick inside the body
+                    ctx.fillStyle = config.colors.bg;
+                    ctx.fillRect(xCenter - barWidth/2, bodyTop, barWidth, rectH);
+                    
+                    // Stroke rect
+                    ctx.strokeRect(xCenter - barWidth/2, bodyTop, barWidth, rectH);
+                }
+            });
+
+            // Draw current price line (horizontal across screen)
+            const last = this.dataPoints[this.dataPoints.length-1];
+            const lastY = h - (last.c / 100 * h);
+            
+            ctx.strokeStyle = config.colors.secondary;
+            ctx.setLineDash([2, 4]);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, lastY);
+            ctx.lineTo(w, lastY);
+            ctx.stroke();
+
+            // Price Tag
+            ctx.fillStyle = config.colors.primary;
+            ctx.font = "10px monospace";
+            ctx.fillText(last.c.toFixed(2), w - 40, lastY - 5);
+        }
+    }
+
+    /**
+     * WIREFRAME GLOBE ENGINE
+     * Rotating 3D sphere with major financial hubs
+     */
+    class WireframeGlobe {
+        constructor(canvasId) {
+            this.canvas = document.getElementById(canvasId);
+            this.ctx = this.canvas.getContext('2d');
+            this.rotation = 0;
+            this.cities = [
+                { name: "NY", lat: 40.7, lon: -74.0 },
+                { name: "LON", lat: 51.5, lon: -0.1 },
+                { name: "TKY", lat: 35.6, lon: 139.6 },
+                { name: "HK", lat: 22.3, lon: 114.1 },
+                { name: "SNG", lat: 1.3, lon: 103.8 },
+                { name: "FRA", lat: 50.1, lon: 8.6 }
+            ];
+            
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+            const parent = this.canvas.parentElement;
+            this.canvas.width = parent.clientWidth;
+            this.canvas.height = parent.clientHeight;
+            this.cx = this.canvas.width / 2;
+            this.cy = this.canvas.height / 2;
+            this.radius = Math.min(this.cx, this.cy) * 0.75;
+        }
+
+        update() {
+            this.rotation += 0.005;
+        }
+
+        // Project Lat/Lon to 3D point, then 2D screen
+        getPoint(lat, lon, radius) {
+            const phi = (90 - lat) * (Math.PI / 180);
+            const theta = (lon + this.rotation * (180 / Math.PI)) * (Math.PI / 180) + this.rotation;
+            
+            // Spherical to Cartesian
+            const x = radius * Math.sin(phi) * Math.cos(theta);
+            const z = radius * Math.sin(phi) * Math.sin(theta);
+            const y = radius * Math.cos(phi);
+
+            return { x, y, z };
+        }
+
+        draw() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.lineWidth = 1;
+
+            // Draw Longitude Lines
+            for (let lon = 0; lon < 360; lon += 30) {
+                this.drawMeridian(lon);
+            }
+            
+            // Draw Latitude Lines
+            for (let lat = -75; lat <= 75; lat += 15) {
+                this.drawParallel(lat);
+            }
+
+            // Draw Cities
+            this.ctx.fillStyle = config.colors.primary;
+            this.cities.forEach(city => {
+                // Effective longitude includes rotation
+                let effLon = city.lon + (this.rotation * 180 / Math.PI);
+                // Normalize to -180 to 180 to check if in front
+                effLon = (effLon % 360 + 360) % 360; 
+                if (effLon > 270 || effLon < 90) { // Visible side
+                    const pt = this.getPoint(city.lat, city.lon, this.radius);
+                    this.ctx.fillRect(this.cx + pt.x - 1.5, this.cy - pt.y - 1.5, 3, 3);
+                    this.ctx.font = "9px Courier New";
+                    this.ctx.fillText(city.name, this.cx + pt.x + 4, this.cy - pt.y);
+                }
+            });
+
+            // Outer ring
+            this.ctx.strokeStyle = config.colors.primary;
+            this.ctx.beginPath();
+            this.ctx.arc(this.cx, this.cy, this.radius, 0, Math.PI * 2);
+            this.ctx.stroke();
+        }
+
+        drawMeridian(lon) {
+            this.ctx.strokeStyle = config.colors.mid;
+            this.ctx.beginPath();
+            for (let lat = -90; lat <= 90; lat += 5) {
+                const pt = this.getPoint(lat, lon, this.radius);
+                if (pt.z > 0) { // Only draw if on front side
+                    this.ctx.lineTo(this.cx + pt.x, this.cy - pt.y);
+                } else {
+                    this.ctx.moveTo(this.cx + pt.x, this.cy - pt.y);
+                }
+            }
+            this.ctx.stroke();
+        }
+
+        drawParallel(lat) {
+            this.ctx.strokeStyle = config.colors.mid;
+            this.ctx.beginPath();
+            for (let lon = 0; lon <= 360; lon += 10) {
+                const pt = this.getPoint(lat, lon, this.radius);
+                if (pt.z > 0) {
+                   this.ctx.lineTo(this.cx + pt.x, this.cy - pt.y);
+                } else {
+                   this.ctx.moveTo(this.cx + pt.x, this.cy - pt.y);
+                }
+            }
+            this.ctx.stroke();
+        }
+    }
+
+    /**
+     * DOM MANAGER
+     */
+    const domManager = {
+        stocks: [
+            { sym: 'NVDA', price: 920.50 },
+            { sym: 'MSFT', price: 415.20 },
+            { sym: 'AAPL', price: 172.40 },
+            { sym: 'GOOG', price: 175.10 },
+            { sym: 'AMZN', price: 180.30 },
+            { sym: 'META', price: 490.80 },
+            { sym: 'TSLA', price: 165.90 },
+            { sym: 'AMD',  price: 190.25 },
+            { sym: 'INTC', price: 35.40 },
+            { sym: 'IBM',  price: 192.10 }
+        ],
+        logs: [
+            "INIT_SEQUENCE_COMPLETE",
+            "CONNECTION_ESTABLISHED: NODE_04",
+            "FETCHING_MARKET_DATA...",
+            "BUFFER_OVERFLOW_PROTECTION: ON",
+            "RENDERING_CONTEXT: 2D_ACCEL"
+        ],
+
+        init() {
+            this.renderStocks();
+            this.updateClock();
+            setInterval(() => this.updateClock(), 1000);
+            setInterval(() => this.fluctuateStocks(), 2000);
+            setInterval(() => this.addLog(), 3500);
+            setInterval(() => this.updateKPI(), 500);
+        },
+
+        updateClock() {
+            document.getElementById('clock').innerText = formatTime();
+        },
+
+        renderStocks() {
+            const container = document.getElementById('stockContainer');
+            container.innerHTML = '';
+            this.stocks.forEach(stock => {
+                const row = document.createElement('div');
+                row.className = 'stock-row';
+                row.innerHTML = `
+                    <span>${stock.sym}</span>
+                    <span>${stock.price.toFixed(2)}</span>
+                `;
+                container.appendChild(row);
+            });
+        },
+
+        fluctuateStocks() {
+            this.stocks.forEach(stock => {
+                const change = (Math.random() - 0.5) * 2;
+                stock.price += change;
+            });
+            this.renderStocks();
+        },
+
+        addLog() {
+            const container = document.getElementById('logContainer');
+            const newLog = document.createElement('div');
+            newLog.className = 'log-entry';
+            
+            const messages = [
+                "PACKET_RECEIVED [24kb]",
+                "SYNCING_NODES...",
+                "CALCULATING_HASH...",
+                "UPDATING_LEGER",
+                "API_LATENCY: 12ms",
+                "ENCRYPTION_CYCLE_COMPLETE",
+                "MEMORY_USAGE: 42%"
+            ];
+            
+            newLog.innerText = messages[Math.floor(Math.random() * messages.length)];
+            
+            if(container.children.length > 6) {
+                container.removeChild(container.firstElementChild);
+            }
+            container.appendChild(newLog);
+        },
+
+        updateKPI() {
+            const val = 80 + (Math.sin(Date.now() / 1000) * 15);
+            document.getElementById('volatilityVal').innerText = val.toFixed(1) + "%";
+            document.getElementById('volBar').style.width = val + "%";
+        }
+    };
+
+    /**
+     * MAIN LOOP
+     */
+    const chart = new RetroChart('mainChart');
+    const globe = new WireframeGlobe('globeCanvas');
+
+    domManager.init();
+
+    let lastTime = 0;
+    const chartInterval = 250; // Increased from 100 to 250ms for slower chart updates
+    let timer = 0;
+
+    function animate(timestamp) {
+        const deltaTime = timestamp - lastTime;
+        lastTime = timestamp;
+        
+        timer += deltaTime;
+        if(timer > chartInterval) {
+            chart.update();
+            timer = 0;
+        }
+        
+        // Globe updates every frame for smooth rotation
+        globe.update();
+
+        chart.draw();
+        globe.draw();
+        
+        requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+
+</script>
+</body>
+</html>
