@@ -135,6 +135,11 @@ export default function SimuladorVida() {
     const modelResult = useMemo(() => runModeloVida(effectiveInputs), [effectiveInputs]);
 
     const chartData = useMemo(() => {
+        const inputs_alquiler = { ...effectiveInputs, year_compra_vivienda: 3000 };
+        const alquiler_porcentaje_precio = 0.04;
+        inputs_alquiler.alquiler_mensual = (alquiler_porcentaje_precio * effectiveInputs.precio_vivienda * 1000) / 12;
+        const modelAlquiler = runModeloVida(inputs_alquiler);
+
         return Array.from({ length: modelResult.periods }).map((_, i) => ({
             year: modelResult.getPeriod(i),
             fondos: modelResult.arr_fondos_real[i],
@@ -142,8 +147,9 @@ export default function SimuladorVida() {
             resultado: modelResult.arr_resultado_neto[i],
             ingresosNominal: modelResult.arr_ingresos_brutos_nominal[i],
             ingresosReal: modelResult.arr_ingresos_brutos_real[i],
+            fondosAlquiler: modelAlquiler.arr_fondos_real[i]
         }));
-    }, [modelResult]);
+    }, [modelResult, effectiveInputs]);
 
     const groupedData = useMemo(() => {
         const groups: Record<string, any[]> = {};
@@ -390,7 +396,7 @@ export default function SimuladorVida() {
                                         </ResponsiveContainer>
                                     </div>
                                     <div className="h-[300px] w-full">
-                                        <h3 className="text-white font-mono text-sm mb-4">Evolución de Ingresos</h3>
+                                        <h3 className="text-white font-mono text-sm mb-4">Alquiler vs Comprar</h3>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -398,8 +404,9 @@ export default function SimuladorVida() {
                                                 <YAxis stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
                                                 <Tooltip content={<CustomTooltip />} />
                                                 <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
-                                                <Line type="monotone" dataKey="ingresosNominal" name="Ingresos (nominal)" stroke="#888888" strokeWidth={2} dot={false} />
-                                                <Line type="monotone" dataKey="ingresosReal" name="Ingresos (real)" stroke="#ffffff" strokeWidth={2} dot={false} />
+                                                <Line type="monotone" dataKey="fondos" name="Fondos (real) (Compra)" stroke="#666666" strokeWidth={2} dot={false} legendType="line" />
+                                                <Line type="monotone" dataKey="patrimonio" name="Patrimonio (real) (Compra)" stroke="#ffffff" strokeWidth={2} dot={false} legendType="line" />
+                                                <Line type="monotone" dataKey="fondosAlquiler" name="Fondos (real) (Alquiler)" stroke="#bbbbbb" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>
