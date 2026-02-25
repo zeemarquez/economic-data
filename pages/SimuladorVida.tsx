@@ -19,22 +19,22 @@ import {
 } from 'recharts';
 
 const defaultInputs: InputsModeloVida = {
-    nacimiento_hijos: [2030, 2031, 2033, 2035, 2037],
-    coste_educacion_mensual: 700,
+    nacimiento_hijos: [2030, 2031],
+    coste_educacion_mensual: 150,
     alimentacion_mensual: 160,
     ocio_mensual: 50,
     vestimenta_mensual: 50,
     otros_gastos_mensuales: 200,
 
-    alquiler_mensual: 2500, // 5% de precio_vivienda por defecto para que coincida con modo simple
-    precio_vivienda: 600,
+    alquiler_mensual: 1800, // 5% de precio_vivienda por defecto para que coincida con modo simple
+    precio_vivienda: 400,
     tin_hipoteca: 0.029,
     years_hipoteca: 30,
 
     year_indepen: 2028,
     year_compra_vivienda: 2032,
     ingresos_trabajo_brutos_y0: 45,
-    ingresos_trabajo_brutos_y15: 100,
+    ingresos_trabajo_brutos_y15: 80,
 
     capital_inicial: 30,
     tasa_impositiva_salario: 0.31,
@@ -44,9 +44,9 @@ const defaultInputs: InputsModeloVida = {
     inflaccion: 0.03,
     tir_inmobiliaria: 0.02,
     tir_ahorros: 0.09,
-    ayuda_entrada: 0,
+    ayuda_entrada: 10,
     liquido_minimo: 5,
-    descuentos_educacion: true
+    descuentos_educacion: false
 };
 
 const formatCurrency = (val: number) => new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(val);
@@ -451,8 +451,8 @@ export default function SimuladorVida() {
     const [gastosHijoMesSimple, setGastosHijoMesSimple] = useState(460); // 160 + 50 + 50 + 200
 
     // Retirement Panel
-    const [esperanzaVida, setEsperanzaVida] = useState(2078);
-    const [herenciaNominal, setHerenciaNominal] = useState(2000);
+    const [esperanzaVida, setEsperanzaVida] = useState(2080);
+    const [herenciaNominal, setHerenciaNominal] = useState(200);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof InputsModeloVida) => {
         let val: any = parseFloat(e.target.value);
@@ -686,18 +686,20 @@ export default function SimuladorVida() {
                                         <>
                                             <Input label="Educ. (€/mes)" value={formatInput(inputs.coste_educacion_mensual)} onChange={e => handleInputChange(e, 'coste_educacion_mensual')} tooltip="Coste mensual de educación o colegio por cada hijo." />
                                             <div className="flex flex-col gap-2 w-full">
-                                                <div className="flex items-center pl-1">
-                                                    <label className="text-xs uppercase tracking-widest text-neutral-500 font-mono">Descuentos</label>
+                                                <div className="flex items-center pl-1 min-h-[16px]">
+                                                    <Tooltip text="Aplica reducciones por familia numerosa (2 hijos: -15%, 3 hijos: -50%, 4+: gratis).">
+                                                        <label className="text-xs uppercase tracking-widest text-neutral-500 font-mono">Descuentos</label>
+                                                    </Tooltip>
                                                 </div>
                                                 <div className="flex bg-neutral-900/50 rounded-lg p-1 border border-neutral-800 h-[46px] relative group overflow-hidden">
                                                     <button
-                                                        className={`flex-1 text-[10px] font-mono uppercase tracking-wider rounded transition-all duration-300 z-10 ${!inputs.descuentos_educacion ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                                        className={`flex-1 text-[11px] font-mono uppercase tracking-widest rounded transition-all duration-300 z-10 ${!inputs.descuentos_educacion ? 'bg-white/10 text-white shadow-lg shadow-black/50' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
                                                         onClick={() => setInputs({ ...inputs, descuentos_educacion: false })}
                                                     >
                                                         No
                                                     </button>
                                                     <button
-                                                        className={`flex-1 text-[10px] font-mono uppercase tracking-wider rounded transition-all duration-300 z-10 ${inputs.descuentos_educacion ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                                        className={`flex-1 text-[11px] font-mono uppercase tracking-widest rounded transition-all duration-300 z-10 ${inputs.descuentos_educacion ? 'bg-white/10 text-white shadow-lg shadow-black/50' : 'text-neutral-500 hover:text-white hover:bg-white/5'}`}
                                                         onClick={() => setInputs({ ...inputs, descuentos_educacion: true })}
                                                     >
                                                         Sí
