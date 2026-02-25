@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Calculator, LineChart as ChartIcon, LayoutDashboard, Target, ChevronDown, ChevronRight, BookOpen, Info } from 'lucide-react';
+import { ArrowLeft, Calculator, LineChart as ChartIcon, LayoutDashboard, ChevronDown, ChevronRight, BookOpen, Info } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Tooltip } from '../components/ui/Tooltip';
@@ -321,8 +321,8 @@ const METOD_SECTIONS: MetodSection[] = [
             },
             {
                 label: 'Año mínimo de jubilación',
-                desc: 'El simulador barre todos los años posibles de jubilación (desde hoy hasta la esperanza de vida) y selecciona el primero para el cual la proyección es viable Y el patrimonio real en el año de la esperanza de vida supera la herencia deseada (ajustada por inflación). Si no existe ningún año válido devuelve N/A.',
-                formula: 'Viable si: PatrimonioReal(T_final) > Herencia × (1 + InflAcum(T_final))\n           y is_possible = true para ese año de jubilación'
+                desc: 'El simulador barre todos los años posibles de jubilación (desde hoy hasta la esperanza de vida) y selecciona el primero para el cual la proyección es viable Y el patrimonio real en el año de la esperanza de vida supera la herencia deseada (en valor real, mismo año base). Si no existe ningún año válido devuelve N/A.',
+                formula: 'Viable si: PatrimonioReal(T_final) > Herencia (ambos en k€ reales)\n           y is_possible = true para ese año de jubilación'
             },
         ]
     },
@@ -450,10 +450,6 @@ export default function SimuladorVida() {
     const [tipoColegio, setTipoColegio] = useState<'publico' | 'privado'>('privado');
     const [gastosHijoMesSimple, setGastosHijoMesSimple] = useState(460); // 160 + 50 + 50 + 200
 
-    // Retirement Panel
-    const [esperanzaVida, setEsperanzaVida] = useState(2080);
-    const [herenciaNominal, setHerenciaNominal] = useState(200);
-
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof InputsModeloVida) => {
         let val: any = parseFloat(e.target.value);
         setInputs({ ...inputs, [field]: isNaN(val) ? 0 : val });
@@ -518,32 +514,6 @@ export default function SimuladorVida() {
         }
         return groups;
     }, [modelResult.tableData]);
-
-    // Minimum Retirement Calculation
-    const minRetirement = useMemo(() => {
-        const t_final = esperanzaVida - modelResult.initial_period;
-        let minYear = null;
-        let achievedRealPatrimony = null;
-        let targetInheritance = null;
-
-        for (let y = 2027; y < esperanzaVida; y++) {
-            const testInputs = { ...effectiveInputs, year_jubilacion: y };
-            const res = runModeloVida(testInputs);
-            if (t_final < 0 || t_final >= res.periods) continue;
-
-            const realInheritance = herenciaNominal * (1 + res.inflaccion_acumulada[t_final]);
-            const patrimony = res.arr_patrimonio_real[t_final];
-            const is_possible = (patrimony > realInheritance) && res.is_possible;
-
-            if (is_possible) {
-                minYear = y;
-                achievedRealPatrimony = patrimony;
-                targetInheritance = realInheritance;
-                break;
-            }
-        }
-        return { minYear, targetInheritance, achievedRealPatrimony };
-    }, [inputs, esperanzaVida, herenciaNominal, modelResult.initial_period]);
 
     return (
         <div className="min-h-screen p-4 md:p-8 flex flex-col items-center">
@@ -887,53 +857,6 @@ export default function SimuladorVida() {
                                     </table>
                                 </div>
                             )}
-                        </div>
-                    </Card>
-                </div>
-
-                {/* BOTTOM PANEL - Minimum Retirement */}
-                <div className="col-span-1 lg:col-span-12">
-                    <Card
-                        className="border-white/20 bg-gradient-to-br from-neutral-900 to-black"
-                        icon={<Target size={18} className="text-white" />}
-                        title="Cálculo Jubilación Mínima"
-                    >
-                        <div className="flex flex-col md:flex-row gap-8 items-center mt-4 border border-white/5 p-6 rounded-lg bg-black/20">
-                            <div className="flex-1 flex gap-4 w-full">
-                                <div className="w-full max-w-xs">
-                                    <Input
-                                        label="Esperanza de vida (Año)"
-                                        value={formatInput(esperanzaVida)}
-                                        onChange={e => {
-                                            const v = parseInt(e.target.value);
-                                            if (!isNaN(v)) setEsperanzaVida(v);
-                                        }}
-                                    />
-                                </div>
-                                <div className="w-full max-w-xs">
-                                    <Input
-                                        label="Herencia Real (k€)"
-                                        value={formatInput(herenciaNominal)}
-                                        onChange={e => {
-                                            const v = parseInt(e.target.value);
-                                            if (!isNaN(v)) setHerenciaNominal(v);
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                            <div className="min-w-[250px] text-center md:text-right md:border-l md:border-white/10 md:pl-8">
-                                <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest mb-2">
-                                    Año Mínimo Jubilación
-                                </p>
-                                <div className="text-5xl md:text-6xl font-bold text-white font-mono tracking-tight">
-                                    {minRetirement.minYear ? minRetirement.minYear : <span className="text-red-500">N/A</span>}
-                                </div>
-                                {minRetirement.minYear && (
-                                    <p className="text-neutral-400 font-mono text-xs mt-3">
-                                        Patrimonio final (real) est: <span className="text-white">{formatCurrency(minRetirement.achievedRealPatrimony!)}k€</span>
-                                    </p>
-                                )}
-                            </div>
                         </div>
                     </Card>
                 </div>
