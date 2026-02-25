@@ -1,16 +1,28 @@
 import React from 'react';
+import { Tooltip } from './Tooltip';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
   prefix?: string;
+  tooltip?: string;
 }
 
-export const Input: React.FC<InputProps> = ({ label, prefix, className, ...props }) => {
+export const Input: React.FC<InputProps> = ({ label, prefix, tooltip, className, ...props }) => {
   return (
     <div className="flex flex-col gap-2 w-full">
-      <label className="text-xs uppercase tracking-widest text-neutral-500 font-mono pl-1">
-        {label}
-      </label>
+      <div className="flex items-center pl-1">
+        {tooltip ? (
+          <Tooltip text={tooltip}>
+            <label className="text-xs uppercase tracking-widest text-neutral-500 font-mono">
+              {label}
+            </label>
+          </Tooltip>
+        ) : (
+          <label className="text-xs uppercase tracking-widest text-neutral-500 font-mono">
+            {label}
+          </label>
+        )}
+      </div>
       <div className="relative group">
         {prefix && (
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-mono text-lg z-10">

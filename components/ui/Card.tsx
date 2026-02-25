@@ -18,7 +18,7 @@ export const Card: React.FC<CardProps> = ({
   const hasHeader = title || icon || headerAside;
 
   return (
-    <div className={`glass-panel rounded-xl p-6 relative overflow-hidden ${className}`}>
+    <div className={`glass-panel rounded-xl p-6 relative overflow-visible ${className}`}>
       {hasHeader && (
         <div className="mb-6 flex items-center justify-between border-b border-white/5 pb-3">
           <div className="flex items-center gap-3">

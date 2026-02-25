@@ -209,12 +209,19 @@ export function runModeloVida(inputs: InputsModeloVida) {
         }
 
         arr_reembolsos[t] = Math.max(arr_reembolsos_netos[t] + arr_impuestos_ganancias[t], -arr_fondos_bop[t]);
-        arr_fondos_disponibles[t] = arr_fondos_bop[t] >= Math.abs(arr_reembolsos[t]) ? 1 : 0;
+        arr_fondos_disponibles[t] = arr_fondos_bop[t] > Math.abs(arr_reembolsos[t]) ? 1 : 0;
 
         arr_interes[t] = arr_crecimiento[t] * arr_fondos_bop[t];
         arr_fondos_eop[t] = arr_fondos_bop[t] + arr_suscripciones[t] + arr_reembolsos[t] + arr_interes[t];
         arr_fondos_real[t] = arr_fondos_eop[t] / (inflaccion_acumulada[t] + 1);
         arr_patrimonio_real[t] = arr_fondos_real[t] + arr_patrimonio_inmobiliario_real[t] + (arr_liquido[t] / (inflaccion_acumulada[t] + 1));
+
+        // Si los fondos no son suficientes, forzar fondos y patrimonio a 0
+        if (!arr_fondos_disponibles[t]) {
+            arr_fondos_eop[t] = 0;
+            arr_fondos_real[t] = 0;
+            arr_patrimonio_real[t] = 0;
+        }
     }
 
     let is_possible = true;

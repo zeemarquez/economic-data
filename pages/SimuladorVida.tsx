@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Calculator, LineChart as ChartIcon, LayoutDashboard, Target, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calculator, LineChart as ChartIcon, LayoutDashboard, Target, ChevronDown, ChevronRight, BookOpen, Info } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { Tooltip } from '../components/ui/Tooltip';
 import { runModeloVida, InputsModeloVida } from '../lib/vidaModel';
 import {
     ComposedChart,
@@ -11,7 +12,7 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip,
+    Tooltip as ChartTooltip,
     Legend,
     ResponsiveContainer,
     Cell
@@ -35,7 +36,7 @@ const defaultInputs: InputsModeloVida = {
     ingresos_trabajo_brutos_y0: 45,
     ingresos_trabajo_brutos_y15: 100,
 
-    capital_inicial: 750,
+    capital_inicial: 30,
     tasa_impositiva_salario: 0.31,
     year_jubilacion: 2065,
     porcentaje_gastos_fijos_vivienda: 0.02,
@@ -81,6 +82,364 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
+
+const CONCEPT_TOOLTIPS: Record<string, string> = {
+    // Macro
+    'Inflacción': 'Tasa de inflación anual prevista para el ajuste de precios y valores reales.',
+    'Inflacción acumulada': 'Nivel de precios acumulado desde el inicio de la simulación.',
+    // Vivienda
+    'Hipoteca TIN': 'Tipo de Interés Nominal aplicado al préstamo hipotecario.',
+    'Entrada hipoteca': 'Capital aportado inicialmente al comprar la vivienda.',
+    'Hipoteca': 'Indica si el préstamo hipotecario está activo en este periodo.',
+    'Hipoteca BoP': 'Deuda hipotecaria pendiente al inicio del año (Beginning of Period).',
+    'Hipoteca interes': 'Intereses pagados al banco durante el año.',
+    'Hipoteca cuota': 'Suma de intereses y capital amortizado pagado el periodo.',
+    'Hipoteca pago de deuda': 'Parte de la cuota anual destinada a reducir la deuda principal.',
+    'Hipoteca EoP': 'Deuda hipotecaria pendiente al final del año (End of Period).',
+    'Patrimonio inmobiliario': 'Valor neto del inmueble (Precio - Deuda pendiente) sin revalorización.',
+    'Vivienda tir': 'Tasa de revalorización anual del valor de mercado de la vivienda.',
+    'Vivienda tir acumulada': 'Revalorización total acumulada del inmueble desde la compra.',
+    'Patrimonio inmobiliario real': 'Valor de mercado neto de la vivienda ajustado por revalorización.',
+    'Gastos fijos': 'Gastos de mantenimiento, IBI y comunidad (valor nominal).',
+    'Gastos fijos inf': 'Gastos de mantenimiento ajustados por la inflación acumulada.',
+    'Alquiler': 'Coste del alquiler mensual anualizado (valor nominal).',
+    'Alquiler inf': 'Coste del alquiler ajustado por la inflación acumulada.',
+    'Vivienda recurrente': 'Gastos habituales: Cuota hipoteca + Gastos mantenimiento + Alquiler.',
+    'Otros gastos compra': 'Impuestos e inscripciones legales en el momento de la compra.',
+    'Vivienda extra': 'Suma de la entrada inicial y los gastos legales de compra.',
+    'Total vivienda': 'Carga financiera total asociada a la vivienda en el periodo.',
+    // Familia
+    'Independizado': 'Indica si se han dejado de compartir gastos con el núcleo familiar original.',
+    'Padres': 'Número de adultos que componen la unidad familiar.',
+    'Hijos': 'Número total de hijos nacidos hasta la fecha.',
+    'Educación por hijo': 'Coste anual de educación/colegio por cada hijo individualmente.',
+    'Hijos colegio': 'Número de hijos en edad de escolarización (entre 1 y 23 años).',
+    'Educación descuento': 'Ahorros aplicados por familia numerosa o subvenciones.',
+    'Educación': 'Gasto total anual en enseñanza para todos los hijos.',
+    'Alimentación': 'Inversión anual en comida para todos los miembros del hogar.',
+    'Ocio': 'Gasto anual en entretenimiento y tiempo libre.',
+    'Vestimenta': 'Gasto anual en ropa y calzado para la familia.',
+    'Otros gastos hijos': 'Gastos no previstos específicamente relacionados con los hijos.',
+    'Total familia': 'Carga financiera total de la unidad familiar (valor nominal).',
+    'Total familia inf': 'Gasto familiar total ajustado por la inflación del periodo.',
+    // P&G
+    'Ingresos brutos nominal': 'Salario total del hogar antes de impuestos e inflación.',
+    'Ingresos brutos real': 'Poder adquisitivo del salario ajustado por inflación.',
+    'Jubilado': 'Indica si se ha dejado de percibir ingresos del trabajo.',
+    'Ingresos totales': 'Salario real percibido antes de impuestos.',
+    'Tasa impositiva': 'Porcentaje medio de impuestos sobre la renta aplicada.',
+    'Ingresos netos': 'Dinero disponible tras pagar impuestos (en términos reales).',
+    'Gastos vivienda': 'Total de costes asociados a la vivienda en el periodo.',
+    'Gastos totales': 'Suma de gastos familiares y de vivienda del periodo.',
+    'Ayuda entrada': 'Ingreso extraordinario recibido para facilitar la compra de vivienda.',
+    'Resultado neto': 'Superávit o déficit del año (Ingresos netos - Gastos + Ayudas).',
+    // Patrimonio
+    'Beneficios netos': 'Excedente de ingresos que se puede ahorrar o invertir.',
+    'Líquido': 'Dinero mantenido en cuenta corriente para gastos menores.',
+    'Fondos BoP': 'Valor de la cartera de inversión al inicio del año.',
+    'Suscripciones': 'Nuevas aportaciones realizadas a los fondos de inversión.',
+    'Reembolsos netos': 'Dinero necesario retirar de la inversión para cubrir déficit.',
+    'Impuestos ganancias': 'Impuestos pagados al liquidar beneficios de la inversión (5% est.).',
+    'Reembolsos': 'Importe total retirado de los fondos (incluyendo impuestos).',
+    'Fondos disponibles': 'Indica si existe patrimonio suficiente para cubrir los gastos.',
+    'Crecimiento': 'Rentabilidad anual generada por la cartera de inversión.',
+    'Interes': 'Rendimiento económico generado por los fondos en el periodo.',
+    'Fondos EoP': 'Valor de la cartera de inversión al finalizar el año.',
+    'Fondos real': 'Valor de las inversiones expresado en poder adquisitivo actual.',
+    'Patrimonio real': 'Suma de inversiones, valor neto de vivienda y efectivo (ajustado).',
+};
+
+// ─── Metodología Panel ───────────────────────────────────────────────────────
+
+interface MetodSection {
+    id: string;
+    title: string;
+    color: string;
+    icon: string;
+    items: { label: string; desc: string; formula?: string }[];
+}
+
+const METOD_SECTIONS: MetodSection[] = [
+    {
+        id: 'horizonte',
+        title: 'Horizonte de simulación',
+        color: '#9ca3af',
+        icon: '📅',
+        items: [
+            {
+                label: 'Periodos',
+                desc: 'La simulación abarca 60 años consecutivos partiendo del año 2026 (año 0 = 2026, año 59 = 2085). Cada periodo representa un año completo.',
+                formula: 'Año(t) = 2026 + t,   t ∈ [0, 59]'
+            }
+        ]
+    },
+    {
+        id: 'macro',
+        title: 'Inflación',
+        color: '#f59e0b',
+        icon: '📈',
+        items: [
+            {
+                label: 'Inflación anual',
+                desc: 'Se aplica una tasa constante de inflación al año (por defecto 3 %). Esta tasa se usa para convertir valores nominales en valores en poder adquisitivo real.',
+            },
+            {
+                label: 'Inflación acumulada',
+                desc: 'Se calcula aplicando el efecto compuesto año a año. Sirve para ajustar los gastos familiares y el valor de las inversiones a euros constantes del año 2026.',
+                formula: 'InflAcum(t) = (1 + inflación) × (1 + InflAcum(t-1)) − 1'
+            }
+        ]
+    },
+    {
+        id: 'vivienda',
+        title: 'Vivienda e Hipoteca',
+        color: '#60a5fa',
+        icon: '🏠',
+        items: [
+            {
+                label: 'Alquiler (antes de la compra)',
+                desc: 'Entre el año de independencia y el año de compra, se imputa un gasto mensual de alquiler. Este gasto se ajusta por la inflación acumulada. En modo Simple, el alquiler equivale al 5 % anual del precio de la vivienda.',
+                formula: 'Gasto alquiler(t) = Alquiler€/mes × 12 / 1000 × (1 + InflAcum(t))'
+            },
+            {
+                label: 'Cuota hipotecaria',
+                desc: 'La cuota anual se calcula con la fórmula estándar de anualidad constante (francés) sobre el capital prestado (precio - entrada). La entrada por defecto es el 20 % del precio.',
+                formula: 'Cuota = Principal × TIN / (1 − (1 + TIN)^(−n))'
+            },
+            {
+                label: 'Amortización del préstamo',
+                desc: 'En cada periodo se calcula la deuda pendiente al inicio del año (BoP), los intereses devengados y el capital amortizado. La deuda al final del año (EoP) se actualiza restando el pago de deuda.',
+                formula: 'Interés(t) = DeudaBoP(t) × TIN\nPagoDeuda(t) = Cuota − Interés(t)\nDeudaEoP(t) = DeudaBoP(t) − PagoDeuda(t)'
+            },
+            {
+                label: 'Patrimonio inmobiliario',
+                desc: 'El valor nominal del inmueble es el precio de compra menos la deuda pendiente. El valor de mercado real añade una revalorización acumulada (TIR inmobiliaria, por defecto 2 % anual compuesto).',
+                formula: 'PatrimInmo(t) = PrecioVivienda − DeudaEoP(t)\nPatrimInmoReal(t) = PatrimInmo(t) × (1 + TIRInmoAcum(t))'
+            },
+            {
+                label: 'Gastos fijos',
+                desc: 'Con hipoteca activa se imputan gastos anuales de IBI, comunidad y mantenimiento equivalentes al 2 % del precio de la vivienda, escalados por inflación acumulada.',
+            },
+            {
+                label: 'Gastos de compra',
+                desc: 'En el año de compra se contabilizan únicamente en ese período: la entrada (20 % del precio) y otros gastos de compra (impuestos, notaría, registro) fijados en el 10 % del precio.',
+                formula: 'GastosCompra = Entrada + 10 % × PrecioVivienda'
+            },
+        ]
+    },
+    {
+        id: 'familia',
+        title: 'Gastos familiares',
+        color: '#34d399',
+        icon: '👨‍👩‍👧',
+        items: [
+            {
+                label: 'Composición familiar',
+                desc: 'La unidad familiar siempre parte de 2 adultos (padres). Los hijos se acumulan a partir del año de nacimiento indicado. Los gastos de alimentación, ocio y vestimenta se multiplican por el total de miembros del hogar.',
+            },
+            {
+                label: 'Educación',
+                desc: 'Se imputa un coste mensual por hijo escolarizado (entre 1 y 23 años). En modo Simple, el usuario elige colegio público (100 €/mes) o privado (700 €/mes). Con familia numerosa reconocida, se aplican descuentos automáticos.',
+                formula: 'Educ(t) = Coste/hijo × HijosEnColegio(t) − Descuento(t)'
+            },
+            {
+                label: 'Descuentos familia numerosa',
+                desc: 'Con 2 hijos en colegio: −15 % en el coste de un hijo. Con 3: −15 % + −50 %. Con 4 o más: además el 4.º y sucesivos van gratuitos. Solo aplica si se activa la opción de descuentos.',
+            },
+            {
+                label: 'Gasto familiar total ajustado',
+                desc: 'El total de gastos familiares (educación + alimentación + ocio + vestimenta + otros) se multiplica por el factor de inflación acumulada para expresarlo en euros corrientes del año t.',
+                formula: 'GastoFamiliaInf(t) = GastoFamilia(t) × (1 + InflAcum(t))'
+            },
+        ]
+    },
+    {
+        id: 'pyg',
+        title: 'Pérdidas y Ganancias (P&G)',
+        color: '#a78bfa',
+        icon: '💰',
+        items: [
+            {
+                label: 'Ingresos brutos',
+                desc: 'Los ingresos brutos nominales siguen una curva lineal entre el valor en Y0 (hoy) y el valor en Y15 (año 15), donde se supone que se ha alcanzado el pico salarial y los ingresos se estabilizan.',
+                formula: 'IngBruto(t) = Y0 + t × (Y15 − Y0) / 15,   para t < 15\nIngBruto(t) = Y15,   para t ≥ 15'
+            },
+            {
+                label: 'Ingresos reales',
+                desc: 'Los ingresos brutos nominales se escalan por la inflación acumulada para calcular el poder adquisitivo equivalente en cada año.',
+                formula: 'IngBrutoReal(t) = IngBrutoNominal(t) × (1 + InflAcum(t))'
+            },
+            {
+                label: 'Impuestos y neto',
+                desc: 'Se aplica una tasa impositiva media fija (por defecto 31 %) sobre los ingresos reales para obtener los ingresos netos disponibles. Tras la jubilación, los ingresos del trabajo pasan a cero.',
+                formula: 'IngNeto(t) = IngBrutoReal(t) × (1 − TasaImpositiva)'
+            },
+            {
+                label: 'Resultado neto del año',
+                desc: 'Es el balance anual: ingresos netos menos gastos totales (familia + vivienda). Un resultado positivo genera ahorro; uno negativo implica consumir de las inversiones. Las ayudas puntuales (entrada vivienda) se suman en el año correspondiente.',
+                formula: 'Resultado(t) = IngNeto(t) + GastosTotales(t) + Ayudas(t)'
+            },
+        ]
+    },
+    {
+        id: 'patrimonio',
+        title: 'Inversiones y Patrimonio',
+        color: '#fb923c',
+        icon: '📊',
+        items: [
+            {
+                label: 'Cartera de inversión',
+                desc: 'Todo el superávit anual (resultado positivo) se destina a fondos de inversión, excepto un mínimo de liquidez reservado en cuenta corriente (por defecto 5 k€ por año). La cartera crece con la TIR de ahorros (por defecto 9 % anual).',
+                formula: 'FondosEoP(t) = FondosBoP(t) + Suscripciones(t) + Reembolsos(t) + Interés(t)'
+            },
+            {
+                label: 'Cobertura de déficits',
+                desc: 'En años con resultado negativo, el déficit se cubre vendiendo fondos. Se aplica un 5 % de impuestos sobre la ganancia realizada al reembolsar. Si los fondos disponibles no son suficientes, la posición colapsa a cero.',
+                formula: 'Reembolso(t) = max(Déficit × 1.05, −FondosBoP(t))'
+            },
+            {
+                label: 'Fondos en valor real',
+                desc: 'Los fondos al final de cada año se deflactan por la inflación acumulada para expresar su valor en poder adquisitivo constante del año 2026.',
+                formula: 'FondosReal(t) = FondosEoP(t) / (1 + InflAcum(t))'
+            },
+            {
+                label: 'Patrimonio real total',
+                desc: 'Es la suma del valor real de los fondos de inversión, el valor de mercado neto de la vivienda (ajustado por la revalorización inmobiliaria) y el efectivo líquido mínimo, todos en términos reales.',
+                formula: 'PatrimonioReal(t) = FondosReal(t) + PatrimInmoReal(t) + Líquido(t) / (1 + InflAcum(t))'
+            },
+        ]
+    },
+    {
+        id: 'viabilidad',
+        title: 'Viabilidad y Jubilación Mínima',
+        color: '#f43f5e',
+        icon: '✅',
+        items: [
+            {
+                label: 'Check de viabilidad',
+                desc: 'La simulación se considera "Viable" si en todos y cada uno de los 60 periodos la cartera de inversión tiene saldo suficiente para cubrir el déficit requerido. En cuanto se detecta un año sin fondos suficientes, la proyección colapsa y se marca como "No Viable".',
+            },
+            {
+                label: 'Año mínimo de jubilación',
+                desc: 'El simulador barre todos los años posibles de jubilación (desde hoy hasta la esperanza de vida) y selecciona el primero para el cual la proyección es viable Y el patrimonio real en el año de la esperanza de vida supera la herencia deseada (ajustada por inflación). Si no existe ningún año válido devuelve N/A.',
+                formula: 'Viable si: PatrimonioReal(T_final) > Herencia × (1 + InflAcum(T_final))\n           y is_possible = true para ese año de jubilación'
+            },
+        ]
+    },
+];
+
+function MetodologiaPanel() {
+    const [open, setOpen] = useState(false);
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+
+    const toggleSection = (id: string) =>
+        setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
+
+    return (
+        <div className="col-span-1 lg:col-span-12">
+            {/* Header toggle */}
+            <button
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center justify-between px-5 py-4 rounded-xl border border-white/10 bg-neutral-900/60 hover:bg-white/5 transition-all group backdrop-blur-sm"
+            >
+                <div className="flex items-center gap-3">
+                    <BookOpen size={18} className="text-neutral-400 group-hover:text-white transition-colors" />
+                    <span className="font-mono text-sm uppercase tracking-widest text-neutral-300 group-hover:text-white transition-colors">
+                        Metodología del simulador
+                    </span>
+                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-wider border border-white/10 px-2 py-0.5 rounded-full">
+                        {METOD_SECTIONS.length} secciones
+                    </span>
+                </div>
+                <div className="flex items-center gap-2 text-neutral-500 group-hover:text-white transition-colors">
+                    <span className="text-[10px] font-mono uppercase tracking-wider">{open ? 'Ocultar' : 'Ver detalle'}</span>
+                    {open ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
+            </button>
+
+            {open && (
+                <div className="mt-4 rounded-xl border border-white/10 bg-neutral-950/80 backdrop-blur-sm overflow-hidden">
+                    {/* Panel header */}
+                    <div className="px-6 py-5 border-b border-white/5 flex items-start gap-4">
+                        <Info size={16} className="text-neutral-500 mt-0.5 shrink-0" />
+                        <p className="text-neutral-400 text-sm leading-relaxed font-mono">
+                            El <span className="text-white">Simulador Vida</span> proyecta la evolución financiera de un hogar a lo largo de 60 años.
+                            Los cálculos se articulan en cinco bloques independientes que se encadenan: <span className="text-neutral-200">inflación → vivienda → familia → P&G → inversiones</span>.
+                            Todos los valores monetarios se expresan en miles de euros (k€). Los valores «reales» están ajustados a poder adquisitivo constante del año 2026.
+                        </p>
+                    </div>
+
+                    {/* Sections */}
+                    <div className="divide-y divide-white/5">
+                        {METOD_SECTIONS.map(section => (
+                            <div key={section.id}>
+                                <button
+                                    onClick={() => toggleSection(section.id)}
+                                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-white/3 transition-colors group/sec"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-lg leading-none">{section.icon}</span>
+                                        <span
+                                            className="font-mono text-xs uppercase tracking-widest font-bold"
+                                            style={{ color: section.color }}
+                                        >
+                                            {section.title}
+                                        </span>
+                                        <span className="text-[9px] font-mono text-neutral-700 uppercase tracking-wider">
+                                            {section.items.length} concepto{section.items.length !== 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                    <ChevronDown
+                                        size={14}
+                                        className="text-neutral-600 group-hover/sec:text-neutral-400 transition-all"
+                                        style={{ transform: openSections[section.id] ? 'rotate(0deg)' : 'rotate(-90deg)' }}
+                                    />
+                                </button>
+
+                                {openSections[section.id] && (
+                                    <div className="px-6 pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {section.items.map((item, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="rounded-lg border border-white/5 bg-black/30 p-4 flex flex-col gap-2"
+                                                style={{ borderLeftColor: section.color + '60', borderLeftWidth: '2px' }}
+                                            >
+                                                <span
+                                                    className="font-mono text-[10px] uppercase tracking-widest font-bold"
+                                                    style={{ color: section.color }}
+                                                >
+                                                    {item.label}
+                                                </span>
+                                                <p className="text-neutral-400 text-xs leading-relaxed">
+                                                    {item.desc}
+                                                </p>
+                                                {item.formula && (
+                                                    <pre
+                                                        className="mt-1 text-[10px] font-mono leading-relaxed px-3 py-2 rounded bg-white/3 border border-white/5 whitespace-pre-wrap"
+                                                        style={{ color: section.color + 'cc' }}
+                                                    >
+                                                        {item.formula}
+                                                    </pre>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-6 py-4 border-t border-white/5 flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-neutral-700 uppercase tracking-wider">
+                            Premisas clave: inflación constante · tasa impositiva media fija · TIR de inversiones constante · hipoteca a tipo fijo · todos los valores en k€
+                        </span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function SimuladorVida() {
     const [inputs, setInputs] = useState<InputsModeloVida>(defaultInputs);
@@ -227,34 +586,34 @@ export default function SimuladorVida() {
                             </div>
                         }
                     >
-                        <div className="flex flex-col gap-6 mt-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="flex flex-col gap-6 mt-4 flex-1 overflow-y-auto pr-2 custom-scrollbar overflow-x-visible pt-8 pb-32">
                             <div className="space-y-4">
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Ingresos</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Input label="Ingresos Y0 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y0)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y0')} />
-                                    <Input label="Ingresos Y15 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y15)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y15')} />
-                                    {!modoSimple && <Input label="Tasa (%)" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} />}
-                                    <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} />
+                                    <Input label="Ingresos Y0 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y0)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y0')} tooltip="Ingresos totales brutos del hogar en el primer año (salarios nominales)." />
+                                    <Input label="Ingresos Y15 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y15)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y15')} tooltip="Ingresos totales brutos estimados del hogar en el año 15 (salarios nominales)." />
+                                    {!modoSimple && <Input label="Tasa (%)" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} tooltip="Tasa impositiva media aplicada al salario bruto para calcular el neto." />}
+                                    <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a ser cero." />
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Vivienda</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {!modoSimple && <Input label="Alquiler (€/mes)" value={formatInput(inputs.alquiler_mensual)} onChange={e => handleInputChange(e, 'alquiler_mensual')} />}
-                                    <Input label="Año Indep." value={formatInput(inputs.year_indepen)} onChange={e => handleInputChange(e, 'year_indepen')} />
-                                    <Input label="Precio (k€)" value={formatInput(inputs.precio_vivienda)} onChange={e => handleInputChange(e, 'precio_vivienda')} />
-                                    <Input label="Año Compra" value={formatInput(inputs.year_compra_vivienda)} onChange={e => handleInputChange(e, 'year_compra_vivienda')} />
+                                    {!modoSimple && <Input label="Alquiler (€/mes)" value={formatInput(inputs.alquiler_mensual)} onChange={e => handleInputChange(e, 'alquiler_mensual')} tooltip="Gasto mensual de alquiler hasta el año de compra de la vivienda." />}
+                                    <Input label="Año Indep." value={formatInput(inputs.year_indepen)} onChange={e => handleInputChange(e, 'year_indepen')} tooltip="Año en el que se empieza a incurrir en gastos de vivienda (alquiler o compra)." />
+                                    <Input label="Precio (k€)" value={formatInput(inputs.precio_vivienda)} onChange={e => handleInputChange(e, 'precio_vivienda')} tooltip="Precio de compra de la vivienda en el año seleccionado." />
+                                    <Input label="Año Compra" value={formatInput(inputs.year_compra_vivienda)} onChange={e => handleInputChange(e, 'year_compra_vivienda')} tooltip="Año en el que se compra la vivienda y empieza la hipoteca." />
                                     {!modoSimple && (
                                         <>
-                                            <Input label="Años Hipoteca" value={formatInput(inputs.years_hipoteca)} onChange={e => handleInputChange(e, 'years_hipoteca')} />
-                                            <Input label="TIN (%)" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} />
-                                            <Input label="Entrada (%)" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} />
-                                            <Input label="Gastos (%)" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} />
+                                            <Input label="Años Hipoteca" value={formatInput(inputs.years_hipoteca)} onChange={e => handleInputChange(e, 'years_hipoteca')} tooltip="Duración total del préstamo hipotecario en años." />
+                                            <Input label="TIN (%)" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} tooltip="Tipo de Interés Nominal de la hipoteca." />
+                                            <Input label="Entrada (%)" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} tooltip="Porcentaje del precio de la vivienda que se aporta como entrada inicial." />
+                                            <Input label="Gastos (%)" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} tooltip="Gastos anuales fijos del inmueble (IBI, comunidad, mantenimiento) como % del precio." />
                                         </>
                                     )}
                                     <div className="col-span-2">
-                                        <Input label="Ayuda Entrada (k€)" value={formatInput(inputs.ayuda_entrada!)} onChange={e => handleInputChange(e, 'ayuda_entrada')} />
+                                        <Input label="Ayuda Entrada (k€)" value={formatInput(inputs.ayuda_entrada!)} onChange={e => handleInputChange(e, 'ayuda_entrada')} tooltip="Ayuda financiera puntual recibida en el momento de la compra de la vivienda." />
                                     </div>
                                 </div>
                             </div>
@@ -320,18 +679,35 @@ export default function SimuladorVida() {
                                                 <Input label="Gastos/Hijo (€/mes)" value={formatInput(gastosHijoMesSimple)} onChange={e => {
                                                     const v = parseFloat(e.target.value);
                                                     if (!isNaN(v)) setGastosHijoMesSimple(v);
-                                                }} />
+                                                }} tooltip="Gasto mensual estimado por cada hijo (incluyendo alimentación, ocio, vestimenta y otros)." />
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <Input label="Educ. (€/mes)" value={formatInput(inputs.coste_educacion_mensual)} onChange={e => handleInputChange(e, 'coste_educacion_mensual')} />
-                                            <Input label="Alim. (€/mes)" value={formatInput(inputs.alimentacion_mensual)} onChange={e => handleInputChange(e, 'alimentacion_mensual')} />
-                                            <Input label="Ocio (€/mes)" value={formatInput(inputs.ocio_mensual)} onChange={e => handleInputChange(e, 'ocio_mensual')} />
-                                            <Input label="Vest. (€/mes)" value={formatInput(inputs.vestimenta_mensual)} onChange={e => handleInputChange(e, 'vestimenta_mensual')} />
-                                            <div className="col-span-2">
-                                                <Input label="Otros (€/mes)" value={formatInput(inputs.otros_gastos_mensuales)} onChange={e => handleInputChange(e, 'otros_gastos_mensuales')} />
+                                            <Input label="Educ. (€/mes)" value={formatInput(inputs.coste_educacion_mensual)} onChange={e => handleInputChange(e, 'coste_educacion_mensual')} tooltip="Coste mensual de educación o colegio por cada hijo." />
+                                            <div className="flex flex-col gap-2 w-full">
+                                                <div className="flex items-center pl-1">
+                                                    <label className="text-xs uppercase tracking-widest text-neutral-500 font-mono">Descuentos</label>
+                                                </div>
+                                                <div className="flex bg-neutral-900/50 rounded-lg p-1 border border-neutral-800 h-[46px] relative group overflow-hidden">
+                                                    <button
+                                                        className={`flex-1 text-[10px] font-mono uppercase tracking-wider rounded transition-all duration-300 z-10 ${!inputs.descuentos_educacion ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                                        onClick={() => setInputs({ ...inputs, descuentos_educacion: false })}
+                                                    >
+                                                        No
+                                                    </button>
+                                                    <button
+                                                        className={`flex-1 text-[10px] font-mono uppercase tracking-wider rounded transition-all duration-300 z-10 ${inputs.descuentos_educacion ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                                        onClick={() => setInputs({ ...inputs, descuentos_educacion: true })}
+                                                    >
+                                                        Sí
+                                                    </button>
+                                                </div>
                                             </div>
+                                            <Input label="Alim. (€/mes)" value={formatInput(inputs.alimentacion_mensual)} onChange={e => handleInputChange(e, 'alimentacion_mensual')} tooltip="Gasto mensual en alimentación por cada miembro de la familia." />
+                                            <Input label="Vest. (€/mes)" value={formatInput(inputs.vestimenta_mensual)} onChange={e => handleInputChange(e, 'vestimenta_mensual')} tooltip="Gasto mensual en vestimenta por cada miembro de la familia." />
+                                            <Input label="Ocio (€/mes)" value={formatInput(inputs.ocio_mensual)} onChange={e => handleInputChange(e, 'ocio_mensual')} tooltip="Gasto mensual en ocio por cada miembro de la familia." />
+                                            <Input label="Otros (€/mes)" value={formatInput(inputs.otros_gastos_mensuales)} onChange={e => handleInputChange(e, 'otros_gastos_mensuales')} tooltip="Otros gastos mensuales diversos no categorizados." />
                                         </>
                                     )}
                                 </div>
@@ -340,10 +716,10 @@ export default function SimuladorVida() {
                             <div className="space-y-4">
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Patrimonio</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Input label="Capital (k€)" value={formatInput(inputs.capital_inicial!)} onChange={e => handleInputChange(e, 'capital_inicial')} />
-                                    <Input label="TIR (%)" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} />
-                                    <Input label="TIR Inmo. (%)" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} />
-                                    <Input label="Inflacción (%)" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} />
+                                    <Input label="Capital (k€)" value={formatInput(inputs.capital_inicial!)} onChange={e => handleInputChange(e, 'capital_inicial')} tooltip="Capital o ahorros líquidos iniciales al comienzo de la simulación." />
+                                    <Input label="TIR (%)" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} tooltip="Rentabilidad anual esperada de los ahorros e inversiones líquidas." />
+                                    <Input label="TIR Inmo. (%)" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} tooltip="Tasa de revalorización anual esperada del precio de la vivienda." />
+                                    <Input label="Inflacción (%)" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} tooltip="Tasa de inflación anual prevista para el ajuste de precios y valores reales." />
                                 </div>
                             </div>
                         </div>
@@ -356,6 +732,26 @@ export default function SimuladorVida() {
                         className="border-white/20 h-[850px] flex flex-col"
                         icon={<LayoutDashboard size={18} />}
                         title="Dashboard Financiero"
+                        headerAside={
+                            <Tooltip
+                                text={modelResult.is_possible
+                                    ? 'Proyección viable: los fondos son suficientes para cubrir todos los gastos en todos los periodos de la simulación.'
+                                    : 'Proyección no viable: en al menos un periodo los fondos disponibles no son suficientes para cubrir el déficit. Los fondos y el patrimonio colapsan a 0 desde ese punto.'}
+                            >
+                                <div
+                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-[10px] uppercase tracking-widest font-bold transition-all cursor-help ${modelResult.is_possible
+                                        ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                        }`}
+                                >
+                                    <span
+                                        className={`w-1.5 h-1.5 rounded-full animate-pulse ${modelResult.is_possible ? 'bg-green-400' : 'bg-red-400'
+                                            }`}
+                                    />
+                                    {modelResult.is_possible ? 'Viable' : 'No Viable'}
+                                </div>
+                            </Tooltip>
+                        }
                     >
                         <div className="flex gap-4 mb-6 border-b border-white/10 pb-2">
                             <button
@@ -441,16 +837,29 @@ export default function SimuladorVida() {
                                                 {expandedGroups[groupName] && (rows as any[]).map((row) => {
                                                     const { name, values, format, highlight } = row;
                                                     return (
-                                                        <tr key={name} className={`hover:bg-white/5 ${highlight ? 'bg-white/5 font-bold border-y border-white/10' : ''}`}>
+                                                        <tr key={name} className={`hover:bg-white/5 group/row relative ${highlight ? 'bg-white/5 font-bold border-y border-white/10' : ''}`}>
                                                             <td className={`p-2 font-mono text-xs whitespace-nowrap sticky left-0 z-20 ${highlight ? 'bg-neutral-800 text-white' : 'bg-black/80 text-neutral-300'}`}>
-                                                                <span className="pl-6">{name}</span>
+                                                                <div className="pl-6">
+                                                                    {CONCEPT_TOOLTIPS[name] ? (
+                                                                        <Tooltip text={CONCEPT_TOOLTIPS[name]}>
+                                                                            <span>{name}</span>
+                                                                        </Tooltip>
+                                                                    ) : (
+                                                                        <span>{name}</span>
+                                                                    )}
+                                                                </div>
                                                             </td>
                                                             {(values as number[]).map((v: number, i: number) => {
                                                                 let displayValue = '';
+                                                                let cellColorClass = '';
+
                                                                 if (format === 'percentage') {
                                                                     displayValue = `${(v * 100).toFixed(1)}%`;
+                                                                    cellColorClass = v < 0 ? 'text-red-400' : (highlight ? 'text-white' : 'text-neutral-400');
                                                                 } else if (format === 'boolean') {
-                                                                    displayValue = v > 0.5 ? 'SÍ' : 'NO';
+                                                                    const isSi = v > 0.5;
+                                                                    displayValue = isSi ? 'SÍ' : 'NO';
+                                                                    cellColorClass = isSi ? 'text-green-400' : 'text-red-400';
                                                                 } else {
                                                                     const absV = Math.abs(v);
                                                                     if (absV < 0.1) {
@@ -459,10 +868,11 @@ export default function SimuladorVida() {
                                                                         const formatted = formatCurrency(absV);
                                                                         displayValue = v < 0 ? `(${formatted})` : formatted;
                                                                     }
+                                                                    cellColorClass = v < 0 ? 'text-red-400' : (highlight ? 'text-white' : 'text-neutral-400');
                                                                 }
 
                                                                 return (
-                                                                    <td key={i} className={`p-2 font-mono text-xs text-right tabular-nums ${v < 0 ? 'text-red-400' : (highlight ? 'text-white' : 'text-neutral-400')}`}>
+                                                                    <td key={i} className={`p-2 font-mono text-xs text-right tabular-nums ${cellColorClass}`}>
                                                                         {displayValue}
                                                                     </td>
                                                                 );
@@ -525,6 +935,9 @@ export default function SimuladorVida() {
                         </div>
                     </Card>
                 </div>
+
+                {/* METODOLOGÍA PANEL */}
+                <MetodologiaPanel />
             </main>
 
             {/* Global styles for custom scrollbar */}
