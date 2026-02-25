@@ -205,7 +205,7 @@ export const BudgetFlowSankey: React.FC<Props> = ({
 
   // Column 2: "Déficit" - same horizontal level as Ingresos (below it), flows to Gastos
   const col2Gap = 20; // space between Ingresos and Déficit in column 2
-  let deficitNode: { id: string; x: number; y: number; h: number; value: number; label: string; color: string } | null = null;
+  let deficitNode: { id: string; x: number; y: number; h: number; value: number; label: string; color: string; description: string; name: string; } | null = null;
   if (deficit > 0) {
     const h = getH(deficit);
     deficitNode = {

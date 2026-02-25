@@ -28,6 +28,12 @@ const PAGES = [
     description: 'Visualización retro-futurista de generación energética: nuclear, eólica y solar.',
     icon: <Zap size={20} />,
   },
+  {
+    path: '/simulador-vida',
+    title: 'Simulador Vida',
+    description: 'Dashboard financiero personal: modelo a futuro de vivienda, ingresos e hijos.',
+    icon: <Calculator size={20} />,
+  },
 ];
 
 export default function Home() {
@@ -74,23 +80,23 @@ export default function Home() {
         </header>
 
         <main className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8 md:mt-0">
-        {PAGES.map((page) => (
-          <Link
-            key={page.path}
-            to={page.path}
-            className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-xl"
-          >
-            <Card
-              className="h-full border-white/20 shadow-[0_0_30px_-10px_rgba(255,255,255,0.05)] min-h-[180px] flex flex-col transition-all duration-300 group-hover:border-white/30 group-hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.08)]"
-              icon={<span className="text-white opacity-80">{page.icon}</span>}
-              title={page.title}
+          {PAGES.map((page) => (
+            <Link
+              key={page.path}
+              to={page.path}
+              className="block group focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-xl"
             >
-              <p className="text-neutral-400 font-mono text-xs leading-relaxed mt-2 flex-1">
-                {page.description}
-              </p>
-            </Card>
-          </Link>
-        ))}
+              <Card
+                className="h-full border-white/20 shadow-[0_0_30px_-10px_rgba(255,255,255,0.05)] min-h-[180px] flex flex-col transition-all duration-300 group-hover:border-white/30 group-hover:shadow-[0_0_40px_-10px_rgba(255,255,255,0.08)]"
+                icon={<span className="text-white opacity-80">{page.icon}</span>}
+                title={page.title}
+              >
+                <p className="text-neutral-400 font-mono text-xs leading-relaxed mt-2 flex-1">
+                  {page.description}
+                </p>
+              </Card>
+            </Link>
+          ))}
         </main>
 
         <footer className="w-full max-w-2xl mt-16 border-t border-white/5 pt-6 text-center text-neutral-600 text-xs font-mono" />

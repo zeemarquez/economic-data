@@ -21,8 +21,8 @@ export const Input: React.FC<InputProps> = ({ label, prefix, className, ...props
           {...props}
           className={`
             w-full bg-neutral-900/50 border border-neutral-800 rounded-lg 
-            py-4 ${prefix ? 'pl-10' : 'pl-4'} pr-4 
-            text-2xl font-mono text-white placeholder-neutral-700
+            py-2 ${prefix ? 'pl-10' : 'pl-4'} pr-4 
+            text-xl font-mono text-white placeholder-neutral-700
             focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50
             transition-all duration-300 shadow-inner
             ${className}

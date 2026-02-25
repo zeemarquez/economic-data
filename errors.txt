@@ -1,0 +1,1 @@
+﻿components/charts/BudgetFlowSankey.tsx(218,7): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type '{ id: string; x: number; y: number; h: number; value: number; label: string; color: string; }'.
