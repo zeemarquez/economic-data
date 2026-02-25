@@ -14,6 +14,7 @@ import {
     Tooltip,
     Legend,
     ResponsiveContainer,
+    Cell
 } from 'recharts';
 
 const defaultInputs: InputsModeloVida = {
@@ -24,7 +25,7 @@ const defaultInputs: InputsModeloVida = {
     vestimenta_mensual: 50,
     otros_gastos_mensuales: 200,
 
-    alquiler_mensual: 1900,
+    alquiler_mensual: 2500, // 5% de precio_vivienda por defecto para que coincida con modo simple
     precio_vivienda: 600,
     tin_hipoteca: 0.029,
     years_hipoteca: 30,
@@ -53,11 +54,42 @@ const formatInput = (val: number) => {
     return Number(val.toFixed(1)).toString();
 };
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-black/90 border border-white/10 p-3 rounded-lg shadow-xl backdrop-blur-md">
+                <p className="text-neutral-500 font-mono text-[10px] uppercase tracking-widest mb-2 border-b border-white/5 pb-1">{label}</p>
+                <div className="flex flex-col gap-1.5">
+                    {payload.map((entry: any, index: number) => {
+                        let color = entry.color || entry.fill;
+                        if (entry.name === 'Resultado (neto)') {
+                            color = entry.value >= 0 ? '#4ade80' : '#f87171';
+                        }
+                        return (
+                            <div key={index} className="flex justify-between gap-6 items-center">
+                                <span className="text-[10px] font-mono text-neutral-400 uppercase">{entry.name}:</span>
+                                <span className="text-xs font-mono font-bold" style={{ color }}>
+                                    {entry.value < 0 ? `(${formatCurrency(Math.abs(entry.value))})` : formatCurrency(entry.value)}k€
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 
 export default function SimuladorVida() {
     const [inputs, setInputs] = useState<InputsModeloVida>(defaultInputs);
     const [tab, setTab] = useState<'charts' | 'table'>('charts');
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ Macro: true, Vivienda: true, Familia: true, 'P&G': true, Patrimonio: true });
+
+    const [modoSimple, setModoSimple] = useState(false);
+    const [tipoColegio, setTipoColegio] = useState<'publico' | 'privado'>('privado');
+    const [gastosHijoMesSimple, setGastosHijoMesSimple] = useState(460); // 160 + 50 + 50 + 200
 
     // Retirement Panel
     const [esperanzaVida, setEsperanzaVida] = useState(2078);
@@ -78,7 +110,29 @@ export default function SimuladorVida() {
         setInputs({ ...inputs, nacimiento_hijos: newHijos });
     };
 
-    const modelResult = useMemo(() => runModeloVida(inputs), [inputs]);
+    const effectiveInputs = useMemo(() => {
+        if (!modoSimple) return inputs;
+
+        return {
+            ...inputs,
+            tasa_impositiva_salario: 0.31,
+            alquiler_mensual: (inputs.precio_vivienda * 1000 * 0.05) / 12,
+            tin_hipoteca: 0.029,
+            years_hipoteca: 30,
+            porcentaje_entrada_vivienda: 0.20,
+            porcentaje_gastos_fijos_vivienda: 0.02,
+
+            alimentacion_mensual: gastosHijoMesSimple,
+            ocio_mensual: 0,
+            vestimenta_mensual: 0,
+            otros_gastos_mensuales: 0,
+
+            coste_educacion_mensual: tipoColegio === 'publico' ? 100 : 700,
+            descuentos_educacion: tipoColegio === 'privado',
+        };
+    }, [inputs, modoSimple, gastosHijoMesSimple, tipoColegio]);
+
+    const modelResult = useMemo(() => runModeloVida(effectiveInputs), [effectiveInputs]);
 
     const chartData = useMemo(() => {
         return Array.from({ length: modelResult.periods }).map((_, i) => ({
@@ -108,7 +162,7 @@ export default function SimuladorVida() {
         let targetInheritance = null;
 
         for (let y = 2027; y < esperanzaVida; y++) {
-            const testInputs = { ...inputs, year_jubilacion: y };
+            const testInputs = { ...effectiveInputs, year_jubilacion: y };
             const res = runModeloVida(testInputs);
             if (t_final < 0 || t_final >= res.periods) continue;
 
@@ -150,6 +204,22 @@ export default function SimuladorVida() {
                         className="border-white/20 shadow-[0_0_30px_-10px_rgba(255,255,255,0.05)] h-[850px] flex flex-col"
                         icon={<Calculator size={18} />}
                         title="Parámetros"
+                        headerAside={
+                            <div className="flex bg-neutral-900/50 rounded p-0.5 border border-white/5">
+                                <button
+                                    className={`px-3 py-1 text-[10px] font-mono uppercase tracking-wider rounded transition-colors ${modoSimple ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                    onClick={() => setModoSimple(true)}
+                                >
+                                    Simple
+                                </button>
+                                <button
+                                    className={`px-3 py-1 text-[10px] font-mono uppercase tracking-wider rounded transition-colors ${!modoSimple ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                                    onClick={() => setModoSimple(false)}
+                                >
+                                    Detallado
+                                </button>
+                            </div>
+                        }
                     >
                         <div className="flex flex-col gap-6 mt-4 flex-1 overflow-y-auto pr-2 custom-scrollbar">
                             <div className="space-y-4">
@@ -157,7 +227,7 @@ export default function SimuladorVida() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <Input label="Ingresos Y0 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y0)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y0')} />
                                     <Input label="Ingresos Y15 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y15)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y15')} />
-                                    <Input label="Tasa (%)" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} />
+                                    {!modoSimple && <Input label="Tasa (%)" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} />}
                                     <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} />
                                 </div>
                             </div>
@@ -165,12 +235,20 @@ export default function SimuladorVida() {
                             <div className="space-y-4">
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Vivienda</h3>
                                 <div className="grid grid-cols-2 gap-3">
+                                    {!modoSimple && <Input label="Alquiler (€/mes)" value={formatInput(inputs.alquiler_mensual)} onChange={e => handleInputChange(e, 'alquiler_mensual')} />}
+                                    <Input label="Año Indep." value={formatInput(inputs.year_indepen)} onChange={e => handleInputChange(e, 'year_indepen')} />
                                     <Input label="Precio (k€)" value={formatInput(inputs.precio_vivienda)} onChange={e => handleInputChange(e, 'precio_vivienda')} />
                                     <Input label="Año Compra" value={formatInput(inputs.year_compra_vivienda)} onChange={e => handleInputChange(e, 'year_compra_vivienda')} />
-                                    <Input label="Alquiler (€/mes)" value={formatInput(inputs.alquiler_mensual)} onChange={e => handleInputChange(e, 'alquiler_mensual')} />
-                                    <Input label="TIN (%)" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} />
+                                    {!modoSimple && (
+                                        <>
+                                            <Input label="Años Hipoteca" value={formatInput(inputs.years_hipoteca)} onChange={e => handleInputChange(e, 'years_hipoteca')} />
+                                            <Input label="TIN (%)" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} />
+                                            <Input label="Entrada (%)" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} />
+                                            <Input label="Gastos (%)" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} />
+                                        </>
+                                    )}
                                     <div className="col-span-2">
-                                        <Input label="Años Hipoteca" value={formatInput(inputs.years_hipoteca)} onChange={e => handleInputChange(e, 'years_hipoteca')} />
+                                        <Input label="Ayuda Entrada (k€)" value={formatInput(inputs.ayuda_entrada!)} onChange={e => handleInputChange(e, 'ayuda_entrada')} />
                                     </div>
                                 </div>
                             </div>
@@ -213,8 +291,43 @@ export default function SimuladorVida() {
                                             />
                                         </div>
                                     </div>
-                                    <Input label="Educ. (€/mes)" value={formatInput(inputs.coste_educacion_mensual)} onChange={e => handleInputChange(e, 'coste_educacion_mensual')} />
-                                    <Input label="Alim. (€/mes)" value={formatInput(inputs.alimentacion_mensual)} onChange={e => handleInputChange(e, 'alimentacion_mensual')} />
+                                    {modoSimple ? (
+                                        <>
+                                            <div className="col-span-2 space-y-1">
+                                                <label className="font-mono text-xs uppercase text-neutral-400 pl-1">Colegio</label>
+                                                <div className="flex bg-neutral-900/50 rounded-lg p-1 border border-white/5">
+                                                    <button
+                                                        className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded transition-colors ${tipoColegio === 'publico' ? 'bg-white/10 text-white' : 'text-neutral-500 hover:text-white'}`}
+                                                        onClick={() => setTipoColegio('publico')}
+                                                    >
+                                                        Público
+                                                    </button>
+                                                    <button
+                                                        className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded transition-colors ${tipoColegio === 'privado' ? 'bg-white/10 text-white' : 'text-neutral-500 hover:text-white'}`}
+                                                        onClick={() => setTipoColegio('privado')}
+                                                    >
+                                                        Privado
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <Input label="Gastos/Hijo (€/mes)" value={formatInput(gastosHijoMesSimple)} onChange={e => {
+                                                    const v = parseFloat(e.target.value);
+                                                    if (!isNaN(v)) setGastosHijoMesSimple(v);
+                                                }} />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Input label="Educ. (€/mes)" value={formatInput(inputs.coste_educacion_mensual)} onChange={e => handleInputChange(e, 'coste_educacion_mensual')} />
+                                            <Input label="Alim. (€/mes)" value={formatInput(inputs.alimentacion_mensual)} onChange={e => handleInputChange(e, 'alimentacion_mensual')} />
+                                            <Input label="Ocio (€/mes)" value={formatInput(inputs.ocio_mensual)} onChange={e => handleInputChange(e, 'ocio_mensual')} />
+                                            <Input label="Vest. (€/mes)" value={formatInput(inputs.vestimenta_mensual)} onChange={e => handleInputChange(e, 'vestimenta_mensual')} />
+                                            <div className="col-span-2">
+                                                <Input label="Otros (€/mes)" value={formatInput(inputs.otros_gastos_mensuales)} onChange={e => handleInputChange(e, 'otros_gastos_mensuales')} />
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -223,9 +336,8 @@ export default function SimuladorVida() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <Input label="Capital (k€)" value={formatInput(inputs.capital_inicial!)} onChange={e => handleInputChange(e, 'capital_inicial')} />
                                     <Input label="TIR (%)" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} />
-                                    <div className="col-span-2">
-                                        <Input label="Inflacción (%)" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} />
-                                    </div>
+                                    <Input label="TIR Inmo. (%)" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} />
+                                    <Input label="Inflacción (%)" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} />
                                 </div>
                             </div>
                         </div>
@@ -265,9 +377,13 @@ export default function SimuladorVida() {
                                                 <XAxis dataKey="year" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
                                                 <YAxis yAxisId="left" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
                                                 <YAxis yAxisId="right" orientation="right" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
-                                                <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '4px', fontFamily: 'monospace' }} />
+                                                <Tooltip content={<CustomTooltip />} />
                                                 <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
-                                                <Bar yAxisId="right" dataKey="resultado" name="Resultado (neto)" fill="#ffffff" opacity={0.15} barSize={20} />
+                                                <Bar yAxisId="right" dataKey="resultado" name="Resultado (neto)" barSize={20}>
+                                                    {chartData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.resultado >= 0 ? '#4ade80' : '#f87171'} fillOpacity={0.3} />
+                                                    ))}
+                                                </Bar>
                                                 <Line yAxisId="left" type="monotone" dataKey="fondos" name="Fondos (real)" stroke="#444444" strokeWidth={2} dot={false} />
                                                 <Line yAxisId="left" type="monotone" dataKey="patrimonio" name="Patrimonio (real)" stroke="#ffffff" strokeWidth={2} dot={false} />
                                             </ComposedChart>
@@ -280,7 +396,7 @@ export default function SimuladorVida() {
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                                                 <XAxis dataKey="year" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
                                                 <YAxis stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
-                                                <Tooltip contentStyle={{ backgroundColor: '#000', border: '1px solid #333', borderRadius: '4px', fontFamily: 'monospace' }} />
+                                                <Tooltip content={<CustomTooltip />} />
                                                 <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
                                                 <Line type="monotone" dataKey="ingresosNominal" name="Ingresos (nominal)" stroke="#888888" strokeWidth={2} dot={false} />
                                                 <Line type="monotone" dataKey="ingresosReal" name="Ingresos (real)" stroke="#ffffff" strokeWidth={2} dot={false} />
@@ -315,7 +431,7 @@ export default function SimuladorVida() {
                                                     </td>
                                                     <td colSpan={modelResult.periods} className="p-2 bg-neutral-900/50"></td>
                                                 </tr>
-                                                {expandedGroups[groupName] && rows.map((row) => {
+                                                {expandedGroups[groupName] && (rows as any[]).map((row) => {
                                                     const { name, values, format, highlight } = row;
                                                     return (
                                                         <tr key={name} className={`hover:bg-white/5 ${highlight ? 'bg-white/5 font-bold border-y border-white/10' : ''}`}>
