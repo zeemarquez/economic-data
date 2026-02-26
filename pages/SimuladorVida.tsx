@@ -443,7 +443,7 @@ function MetodologiaPanel() {
 
 function CalculadoraJubilacionPanel({ baseInputs }: { baseInputs: InputsModeloVida }) {
     const [esperanzaVida, setEsperanzaVida] = useState<number | string>(2080);
-    const [herenciaDeseada, setHerenciaDeseada] = useState<number | string>(2000);
+    const [herenciaDeseada, setHerenciaDeseada] = useState<number | string>(800);
 
     const result = useMemo(() => {
         let bestYear: number | null = null;
