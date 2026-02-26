@@ -39,6 +39,7 @@ const defaultInputs: InputsModeloVida = {
     capital_inicial: 30,
     tasa_impositiva_salario: 0.31,
     year_jubilacion: 2065,
+    crecimiento_salario: 0.03,
     porcentaje_gastos_fijos_vivienda: 0.02,
     porcentaje_entrada_vivienda: 0.20,
     inflaccion: 0.03,
@@ -121,7 +122,7 @@ const CONCEPT_TOOLTIPS: Record<string, string> = {
     'Vestimenta': 'Gasto anual en ropa y calzado para la familia.',
     'Otros gastos hijos': 'Gastos no previstos específicamente relacionados con los hijos.',
     'Total familia': 'Carga financiera total de la unidad familiar (valor nominal).',
-    'Total familia inf': 'Gasto familiar total ajustado por la inflación del periodo.',
+    'Total familia real': 'Gasto familiar total ajustado por la inflación del periodo.',
     // P&G
     'Ingresos brutos nominal': 'Salario total del hogar antes de impuestos e inflación.',
     'Ingresos brutos real': 'Poder adquisitivo del salario ajustado por inflación.',
@@ -492,13 +493,15 @@ function CalculadoraJubilacionPanel({ baseInputs }: { baseInputs: InputsModeloVi
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Input
-                                label="Fallecimiento (Año)"
+                                label="Fallecimiento"
+                                suffix="Año"
                                 value={String(esperanzaVida)}
                                 onChange={e => setEsperanzaVida(e.target.value)}
                                 tooltip="Año en el que esperas fallecer (para evaluar el patrimonio final)."
                             />
                             <Input
-                                label="Herencia (k€)"
+                                label="Herencia"
+                                suffix="k€"
                                 value={String(herenciaDeseada)}
                                 onChange={e => setHerenciaDeseada(e.target.value)}
                                 tooltip="Patrimonio que quieres dejar en herencia, en valor actual (hoy)."
@@ -541,12 +544,32 @@ function CalculadoraViviendaPanel({ baseInputs }: { baseInputs: InputsModeloVida
     const [modo, setModo] = useState<'compra' | 'alquiler'>('compra');
     const [yearCompra, setYearCompra] = useState<number | string>(baseInputs.year_compra_vivienda);
     const [ayudaEntrada, setAyudaEntrada] = useState<number | string>(baseInputs.ayuda_entrada || 0);
+    const [yearJubilacion, setYearJubilacion] = useState<number | string>(baseInputs.year_jubilacion ?? 2065);
+    const [yearFallecimiento, setYearFallecimiento] = useState<number | string>(2080);
+    const [herenciaDeseada, setHerenciaDeseada] = useState<number | string>(800);
 
     const result = useMemo(() => {
         let maxAffordable: number | null = null;
 
         let yearCompraNum = typeof yearCompra === 'number' ? yearCompra : parseInt(yearCompra) || 2032;
         let ayudaNum = typeof ayudaEntrada === 'number' ? ayudaEntrada : parseFloat(ayudaEntrada) || 0;
+        let yearJubNum = typeof yearJubilacion === 'number' ? yearJubilacion : parseInt(yearJubilacion) || 2065;
+        let yearFallNum = typeof yearFallecimiento === 'number' ? yearFallecimiento : parseInt(yearFallecimiento) || 2080;
+        let herenciaNum = typeof herenciaDeseada === 'number' ? herenciaDeseada : parseFloat(herenciaDeseada) || 0;
+
+        const initial_period = 2026;
+        const max_t = 59;
+        let t_final = yearFallNum - initial_period;
+        if (t_final < 0) t_final = 0;
+        if (t_final > max_t) t_final = max_t;
+
+        const isViableConHerencia = (model: ReturnType<typeof runModeloVida>) => {
+            if (!model.is_possible) return false;
+            const inflacionAcumulada = model.inflaccion_acumulada[t_final];
+            const herenciaTarget = herenciaNum * (1 + inflacionAcumulada);
+            const patrimonioReal = model.arr_patrimonio_real[t_final];
+            return patrimonioReal >= herenciaTarget;
+        };
 
         if (modo === 'compra') {
             for (let p = 0; p <= 3000; p += 10) {
@@ -554,10 +577,11 @@ function CalculadoraViviendaPanel({ baseInputs }: { baseInputs: InputsModeloVida
                     ...baseInputs,
                     year_compra_vivienda: yearCompraNum,
                     ayuda_entrada: ayudaNum,
+                    year_jubilacion: yearJubNum,
                     precio_vivienda: p
                 };
                 const model = runModeloVida(tryInputs);
-                if (model.is_possible) {
+                if (isViableConHerencia(model)) {
                     maxAffordable = p;
                 } else {
                     break;
@@ -569,10 +593,11 @@ function CalculadoraViviendaPanel({ baseInputs }: { baseInputs: InputsModeloVida
                     ...baseInputs,
                     year_compra_vivienda: 3000,
                     ayuda_entrada: 0,
+                    year_jubilacion: yearJubNum,
                     alquiler_mensual: a
                 };
                 const model = runModeloVida(tryInputs);
-                if (model.is_possible) {
+                if (isViableConHerencia(model)) {
                     maxAffordable = a;
                 } else {
                     break;
@@ -581,7 +606,7 @@ function CalculadoraViviendaPanel({ baseInputs }: { baseInputs: InputsModeloVida
         }
 
         return { maxAffordable };
-    }, [baseInputs, modo, yearCompra, ayudaEntrada]);
+    }, [baseInputs, modo, yearCompra, ayudaEntrada, yearJubilacion, yearFallecimiento, herenciaDeseada]);
 
     return (
         <div className="col-span-1 lg:col-span-12">
@@ -610,25 +635,49 @@ function CalculadoraViviendaPanel({ baseInputs }: { baseInputs: InputsModeloVida
                     <div className="flex flex-col gap-6">
                         <p className="text-sm text-neutral-400 font-mono mb-2">
                             {modo === 'compra'
-                                ? 'Calcula el precio máximo de vivienda que te puedes permitir comprar en el año indicado, dadas las condiciones actuales.'
-                                : 'Calcula el alquiler mensual máximo que te puedes permitir pagar durante toda la simulación (asumiendo que nunca se compra).'}
+                                ? 'Calcula el precio máximo de vivienda que te puedes permitir comprar en el año indicado, asegurando viabilidad y la herencia deseada al año de fallecimiento.'
+                                : 'Calcula el alquiler mensual máximo que te puedes permitir pagar durante toda la simulación (asumiendo que nunca se compra), asegurando viabilidad y la herencia deseada.'}
                         </p>
-                        {modo === 'compra' && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Input
-                                    label="Año Compra"
-                                    value={String(yearCompra)}
-                                    onChange={e => setYearCompra(e.target.value)}
-                                    tooltip="Año en el que se realizará la compra de la vivienda."
-                                />
-                                <Input
-                                    label="Ayuda Entrada (k€)"
-                                    value={String(ayudaEntrada)}
-                                    onChange={e => setAyudaEntrada(e.target.value)}
-                                    tooltip="Ayuda financiera extra recibida en el momento de la compra."
-                                />
-                            </div>
-                        )}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {modo === 'compra' && (
+                                <>
+                                    <Input
+                                        label="Año Compra"
+                                        value={String(yearCompra)}
+                                        onChange={e => setYearCompra(e.target.value)}
+                                        tooltip="Año en el que se realizará la compra de la vivienda."
+                                    />
+                                    <Input
+                                        label="Ayuda Entrada"
+                                        suffix="k€"
+                                        value={String(ayudaEntrada)}
+                                        onChange={e => setAyudaEntrada(e.target.value)}
+                                        tooltip="Ayuda financiera extra recibida en el momento de la compra."
+                                    />
+                                </>
+                            )}
+                            <Input
+                                label="Año Jubilación"
+                                suffix="Año"
+                                value={String(yearJubilacion)}
+                                onChange={e => setYearJubilacion(e.target.value)}
+                                tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a cero."
+                            />
+                            <Input
+                                label="Fallecimiento"
+                                suffix="Año"
+                                value={String(yearFallecimiento)}
+                                onChange={e => setYearFallecimiento(e.target.value)}
+                                tooltip="Año en el que esperas fallecer (para evaluar el patrimonio final y la herencia)."
+                            />
+                            <Input
+                                label="Herencia"
+                                suffix="k€"
+                                value={String(herenciaDeseada)}
+                                onChange={e => setHerenciaDeseada(e.target.value)}
+                                tooltip="Patrimonio que quieres dejar en herencia, en valor actual (hoy). El máximo asequible garantiza alcanzar al menos este patrimonio real al año de fallecimiento."
+                            />
+                        </div>
                         {modo === 'alquiler' && (
                             <div className="text-xs text-neutral-500 font-mono">
                                 Modo alquiler permanente: asume que no hay gastos de compra ni ayudas para entrada, y se paga alquiler mensual (ajustado por inflación) hasta el final del modelo.
@@ -649,7 +698,7 @@ function CalculadoraViviendaPanel({ baseInputs }: { baseInputs: InputsModeloVida
                                 </div>
                                 <div className="flex flex-col gap-3 w-full border-t border-white/10 pt-5">
                                     <div className="text-xs text-neutral-400 font-mono text-center">
-                                        Mantiene la viabilidad a lo largo de todos los periodos del modelo.
+                                        Mantiene la viabilidad en todos los periodos y alcanza al menos la herencia deseada (en valor real) al año de fallecimiento.
                                     </div>
                                 </div>
                             </>
@@ -675,8 +724,42 @@ export default function SimuladorVida() {
     const [dashboardExpanded, setDashboardExpanded] = useState(false);
 
     const [modoSimple, setModoSimple] = useState(false);
-    const [tipoColegio, setTipoColegio] = useState<'publico' | 'privado'>('privado');
+    const [tipoColegio, setTipoColegio] = useState<'publico' | 'privado'>('publico');
     const [gastosHijoMesSimple, setGastosHijoMesSimple] = useState(460); // 160 + 50 + 50 + 200
+
+    // Income table for detailed mode: rows of { year, ingresos } as strings
+    const currentYear = 2026;
+    const [ingresosTabla, setIngresosTabla] = useState<{ year: string; ingresos: string }[]>([
+        { year: String(currentYear), ingresos: String(defaultInputs.ingresos_trabajo_brutos_y0) },
+        { year: String(currentYear + 15), ingresos: String(defaultInputs.ingresos_trabajo_brutos_y15) },
+    ]);
+    const [newIngresosRow, setNewIngresosRow] = useState<{ year: string; ingresos: string }>({ year: '', ingresos: '' });
+
+    const updateIngresosRow = (index: number, field: 'year' | 'ingresos', value: string) => {
+        setIngresosTabla(prev => {
+            const next = [...prev];
+            next[index] = { ...next[index], [field]: value };
+            return next;
+        });
+    };
+
+    const removeIngresosRow = (index: number) => {
+        setIngresosTabla(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const commitNewIngresosRow = () => {
+        const y = parseInt(newIngresosRow.year);
+        const v = parseFloat(newIngresosRow.ingresos);
+        if (!isNaN(y) && !isNaN(v)) {
+            setIngresosTabla(prev => [...prev, { year: newIngresosRow.year, ingresos: newIngresosRow.ingresos }]);
+            setNewIngresosRow({ year: '', ingresos: '' });
+        }
+    };
+
+    // Build the ingresos_tabla for the model (only valid, complete rows)
+    const ingresosTablaForModel = ingresosTabla
+        .map(r => ({ year: parseInt(r.year), ingresos: parseFloat(r.ingresos) }))
+        .filter(r => !isNaN(r.year) && !isNaN(r.ingresos));
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: keyof InputsModeloVida) => {
         let val: any = parseFloat(e.target.value);
@@ -694,33 +777,38 @@ export default function SimuladorVida() {
     };
 
     const effectiveInputs = useMemo(() => {
-        if (!modoSimple) return inputs;
+        if (modoSimple) {
+            return {
+                ...inputs,
+                ingresos_tabla: undefined,
+                tasa_impositiva_salario: 0.31,
+                alquiler_mensual: (inputs.precio_vivienda * 1000 * 0.05) / 12,
+                tin_hipoteca: 0.029,
+                years_hipoteca: 30,
+                porcentaje_entrada_vivienda: 0.20,
+                porcentaje_gastos_fijos_vivienda: 0.02,
 
+                alimentacion_mensual: gastosHijoMesSimple,
+                ocio_mensual: 0,
+                vestimenta_mensual: 0,
+                otros_gastos_mensuales: 0,
+
+                coste_educacion_mensual: tipoColegio === 'publico' ? 100 : 700,
+                descuentos_educacion: tipoColegio === 'privado',
+            };
+        }
+        // Detailed mode: use the income table
         return {
             ...inputs,
-            tasa_impositiva_salario: 0.31,
-            alquiler_mensual: (inputs.precio_vivienda * 1000 * 0.05) / 12,
-            tin_hipoteca: 0.029,
-            years_hipoteca: 30,
-            porcentaje_entrada_vivienda: 0.20,
-            porcentaje_gastos_fijos_vivienda: 0.02,
-
-            alimentacion_mensual: gastosHijoMesSimple,
-            ocio_mensual: 0,
-            vestimenta_mensual: 0,
-            otros_gastos_mensuales: 0,
-
-            coste_educacion_mensual: tipoColegio === 'publico' ? 100 : 700,
-            descuentos_educacion: tipoColegio === 'privado',
+            ingresos_tabla: ingresosTablaForModel.length > 0 ? ingresosTablaForModel : undefined,
         };
-    }, [inputs, modoSimple, gastosHijoMesSimple, tipoColegio]);
+    }, [inputs, modoSimple, gastosHijoMesSimple, tipoColegio, ingresosTablaForModel]);
 
     const modelResult = useMemo(() => runModeloVida(effectiveInputs), [effectiveInputs]);
 
     const chartData = useMemo(() => {
+        // Escenario alquiler: mismos inputs que la tabla salvo year_compra_vivienda = 3000 (nunca comprar, solo alquilar)
         const inputs_alquiler = { ...effectiveInputs, year_compra_vivienda: 3000 };
-        const alquiler_porcentaje_precio = 0.04;
-        inputs_alquiler.alquiler_mensual = (alquiler_porcentaje_precio * effectiveInputs.precio_vivienda * 1000) / 12;
         const modelAlquiler = runModeloVida(inputs_alquiler);
 
         return Array.from({ length: modelResult.periods }).map((_, i) => ({
@@ -730,7 +818,8 @@ export default function SimuladorVida() {
             resultado: modelResult.arr_resultado_neto[i],
             ingresosNominal: modelResult.arr_ingresos_brutos_nominal[i],
             ingresosReal: modelResult.arr_ingresos_brutos_real[i],
-            fondosAlquiler: modelAlquiler.arr_fondos_real[i]
+            fondosAlquiler: modelAlquiler.arr_fondos_real[i],
+            patrimonioAlquiler: modelAlquiler.arr_patrimonio_real[i],
         }));
     }, [modelResult, effectiveInputs]);
 
@@ -787,31 +876,97 @@ export default function SimuladorVida() {
                         <div className="flex flex-col gap-6 mt-4 flex-1 overflow-y-auto pr-2 custom-scrollbar overflow-x-visible pt-8 pb-32">
                             <div className="space-y-4">
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Ingresos</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Input label="Ingresos Y0 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y0)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y0')} tooltip="Ingresos totales brutos del hogar en el primer año (salarios nominales)." />
-                                    <Input label="Ingresos Y15 (k€)" value={formatInput(inputs.ingresos_trabajo_brutos_y15)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y15')} tooltip="Ingresos totales brutos estimados del hogar en el año 15 (salarios nominales)." />
-                                    {!modoSimple && <Input label="Tasa (%)" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} tooltip="Tasa impositiva media aplicada al salario bruto para calcular el neto." />}
-                                    <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a ser cero." />
-                                </div>
+                                {modoSimple ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Input label="Ingresos Y0" suffix="k€" value={formatInput(inputs.ingresos_trabajo_brutos_y0)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y0')} tooltip="Ingresos totales brutos del hogar en el primer año (salarios nominales)." />
+                                        <Input label="Ingresos Y15" suffix="k€" value={formatInput(inputs.ingresos_trabajo_brutos_y15)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y15')} tooltip="Ingresos totales brutos estimados del hogar en el año 15 (salarios nominales)." />
+                                        <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a ser cero." />
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-2">
+                                        {/* Header */}
+                                        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-1">
+                                            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Año</span>
+                                            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Ingresos brutos (k€)</span>
+                                            <span className="w-5" />
+                                        </div>
+                                        {/* Existing rows */}
+                                        {ingresosTabla.map((row, idx) => (
+                                            <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
+                                                <input
+                                                    type="number"
+                                                    value={row.year}
+                                                    onChange={e => updateIngresosRow(idx, 'year', e.target.value)}
+                                                    placeholder="Año"
+                                                    className="w-full bg-neutral-900/60 border border-neutral-700 hover:border-neutral-500 focus:border-white/40 outline-none rounded-lg px-3 py-2 text-sm font-mono text-white placeholder-neutral-600 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    value={row.ingresos}
+                                                    onChange={e => updateIngresosRow(idx, 'ingresos', e.target.value)}
+                                                    placeholder="k€"
+                                                    className="w-full bg-neutral-900/60 border border-neutral-700 hover:border-neutral-500 focus:border-white/40 outline-none rounded-lg px-3 py-2 text-sm font-mono text-white placeholder-neutral-600 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                />
+                                                <button
+                                                    onClick={() => removeIngresosRow(idx)}
+                                                    className="w-5 h-5 flex items-center justify-center text-neutral-600 hover:text-red-400 transition-colors font-mono text-base leading-none"
+                                                    aria-label="Eliminar fila"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {/* Empty row for adding new entries */}
+                                        <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center opacity-50 focus-within:opacity-100 transition-opacity">
+                                            <input
+                                                type="number"
+                                                value={newIngresosRow.year}
+                                                onChange={e => setNewIngresosRow(r => ({ ...r, year: e.target.value }))}
+                                                placeholder="Año"
+                                                className="w-full bg-neutral-900/40 border border-dashed border-neutral-700 hover:border-neutral-500 focus:border-white/40 focus:bg-neutral-900/60 outline-none rounded-lg px-3 py-2 text-sm font-mono text-white placeholder-neutral-600 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                onKeyDown={e => { if (e.key === 'Enter') commitNewIngresosRow(); }}
+                                            />
+                                            <input
+                                                type="number"
+                                                value={newIngresosRow.ingresos}
+                                                onChange={e => setNewIngresosRow(r => ({ ...r, ingresos: e.target.value }))}
+                                                placeholder="k€"
+                                                className="w-full bg-neutral-900/40 border border-dashed border-neutral-700 hover:border-neutral-500 focus:border-white/40 focus:bg-neutral-900/60 outline-none rounded-lg px-3 py-2 text-sm font-mono text-white placeholder-neutral-600 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                onKeyDown={e => { if (e.key === 'Enter') commitNewIngresosRow(); }}
+                                                onBlur={commitNewIngresosRow}
+                                            />
+                                            <span className="w-5" />
+                                        </div>
+                                        <p className="text-[10px] font-mono text-neutral-600 pl-1 mt-0.5">
+                                            Interpolación lineal entre puntos · Extrapolación constante más allá del último
+                                        </p>
+                                        {/* Tax rate, salary growth and retirement year in detailed mode */}
+                                        <div className="grid grid-cols-3 gap-3 mt-1">
+                                            <Input label="Tasa" suffix="%" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} tooltip="Tasa impositiva media aplicada al salario bruto para calcular el neto." />
+                                            <Input label="Crec.Sal" suffix="%" value={formatInput((inputs.crecimiento_salario ?? 0.03) * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'crecimiento_salario')} tooltip="Tasa de crecimiento anual nominal del salario bruto. Por defecto igual a la inflación. Determina cómo aumentan los ingresos reales año a año." />
+                                            <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a ser cero." />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-4">
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Vivienda</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {!modoSimple && <Input label="Alquiler (€/mes)" value={formatInput(inputs.alquiler_mensual)} onChange={e => handleInputChange(e, 'alquiler_mensual')} tooltip="Gasto mensual de alquiler hasta el año de compra de la vivienda." />}
+                                    {!modoSimple && <Input label="Alquiler" suffix="€/mes" value={formatInput(inputs.alquiler_mensual)} onChange={e => handleInputChange(e, 'alquiler_mensual')} tooltip="Gasto mensual de alquiler hasta el año de compra de la vivienda." />}
                                     <Input label="Año Indep." value={formatInput(inputs.year_indepen)} onChange={e => handleInputChange(e, 'year_indepen')} tooltip="Año en el que se empieza a incurrir en gastos de vivienda (alquiler o compra)." />
-                                    <Input label="Precio (k€)" value={formatInput(inputs.precio_vivienda)} onChange={e => handleInputChange(e, 'precio_vivienda')} tooltip="Precio de compra de la vivienda en el año seleccionado." />
+                                    <Input label="Precio" suffix="k€" value={formatInput(inputs.precio_vivienda)} onChange={e => handleInputChange(e, 'precio_vivienda')} tooltip="Precio de compra de la vivienda en el año seleccionado." />
                                     <Input label="Año Compra" value={formatInput(inputs.year_compra_vivienda)} onChange={e => handleInputChange(e, 'year_compra_vivienda')} tooltip="Año en el que se compra la vivienda y empieza la hipoteca." />
                                     {!modoSimple && (
                                         <>
                                             <Input label="Años Hipoteca" value={formatInput(inputs.years_hipoteca)} onChange={e => handleInputChange(e, 'years_hipoteca')} tooltip="Duración total del préstamo hipotecario en años." />
-                                            <Input label="TIN (%)" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} tooltip="Tipo de Interés Nominal de la hipoteca." />
-                                            <Input label="Entrada (%)" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} tooltip="Porcentaje del precio de la vivienda que se aporta como entrada inicial." />
-                                            <Input label="Gastos (%)" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} tooltip="Gastos anuales fijos del inmueble (IBI, comunidad, mantenimiento) como % del precio." />
+                                            <Input label="TIN" suffix="%" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} tooltip="Tipo de Interés Nominal de la hipoteca." />
+                                            <Input label="Entrada" suffix="%" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} tooltip="Porcentaje del precio de la vivienda que se aporta como entrada inicial." />
+                                            <Input label="Gastos" suffix="%" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} tooltip="Gastos anuales fijos del inmueble (IBI, comunidad, mantenimiento) como % del precio." />
                                         </>
                                     )}
                                     <div className="col-span-2">
-                                        <Input label="Ayuda Entrada (k€)" value={formatInput(inputs.ayuda_entrada!)} onChange={e => handleInputChange(e, 'ayuda_entrada')} tooltip="Ayuda financiera puntual recibida en el momento de la compra de la vivienda." />
+                                        <Input label="Ayuda Entrada" suffix="k€" value={formatInput(inputs.ayuda_entrada!)} onChange={e => handleInputChange(e, 'ayuda_entrada')} tooltip="Ayuda financiera puntual recibida en el momento de la compra de la vivienda." />
                                     </div>
                                 </div>
                             </div>
@@ -874,7 +1029,7 @@ export default function SimuladorVida() {
                                                 </div>
                                             </div>
                                             <div className="col-span-2">
-                                                <Input label="Gastos/Hijo (€/mes)" value={formatInput(gastosHijoMesSimple)} onChange={e => {
+                                                <Input label="Gastos/Hijo" suffix="€/mes" value={formatInput(gastosHijoMesSimple)} onChange={e => {
                                                     const v = parseFloat(e.target.value);
                                                     if (!isNaN(v)) setGastosHijoMesSimple(v);
                                                 }} tooltip="Gasto mensual estimado por cada hijo excluyendo educación (alimentación, ocio, vestimenta y otros)." />
@@ -882,7 +1037,7 @@ export default function SimuladorVida() {
                                         </>
                                     ) : (
                                         <>
-                                            <Input label="Educ. (€/mes)" value={formatInput(inputs.coste_educacion_mensual)} onChange={e => handleInputChange(e, 'coste_educacion_mensual')} tooltip="Coste mensual de educación o colegio por cada hijo." />
+                                            <Input label="Educ." suffix="€/mes" value={formatInput(inputs.coste_educacion_mensual)} onChange={e => handleInputChange(e, 'coste_educacion_mensual')} tooltip="Coste mensual de educación o colegio por cada hijo." />
                                             <div className="flex flex-col gap-2 w-full">
                                                 <div className="flex items-center pl-1 min-h-[16px]">
                                                     <Tooltip text="Aplica reducciones por familia numerosa (2 hijos: -15%, 3 hijos: -50%, 4+: gratis).">
@@ -904,10 +1059,10 @@ export default function SimuladorVida() {
                                                     </button>
                                                 </div>
                                             </div>
-                                            <Input label="Alim. (€/mes)" value={formatInput(inputs.alimentacion_mensual)} onChange={e => handleInputChange(e, 'alimentacion_mensual')} tooltip="Gasto mensual en alimentación por cada miembro de la familia." />
-                                            <Input label="Vest. (€/mes)" value={formatInput(inputs.vestimenta_mensual)} onChange={e => handleInputChange(e, 'vestimenta_mensual')} tooltip="Gasto mensual en vestimenta por cada miembro de la familia." />
-                                            <Input label="Ocio (€/mes)" value={formatInput(inputs.ocio_mensual)} onChange={e => handleInputChange(e, 'ocio_mensual')} tooltip="Gasto mensual en ocio por cada miembro de la familia." />
-                                            <Input label="Otros (€/mes)" value={formatInput(inputs.otros_gastos_mensuales)} onChange={e => handleInputChange(e, 'otros_gastos_mensuales')} tooltip="Otros gastos mensuales diversos no categorizados." />
+                                            <Input label="Alim." suffix="€/mes" value={formatInput(inputs.alimentacion_mensual)} onChange={e => handleInputChange(e, 'alimentacion_mensual')} tooltip="Gasto mensual en alimentación por cada miembro de la familia." />
+                                            <Input label="Vest." suffix="€/mes" value={formatInput(inputs.vestimenta_mensual)} onChange={e => handleInputChange(e, 'vestimenta_mensual')} tooltip="Gasto mensual en vestimenta por cada miembro de la familia." />
+                                            <Input label="Ocio" suffix="€/mes" value={formatInput(inputs.ocio_mensual)} onChange={e => handleInputChange(e, 'ocio_mensual')} tooltip="Gasto mensual en ocio por cada miembro de la familia." />
+                                            <Input label="Otros" suffix="€/mes" value={formatInput(inputs.otros_gastos_mensuales)} onChange={e => handleInputChange(e, 'otros_gastos_mensuales')} tooltip="Otros gastos mensuales diversos no categorizados." />
                                         </>
                                     )}
                                 </div>
@@ -916,10 +1071,10 @@ export default function SimuladorVida() {
                             <div className="space-y-4">
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Patrimonio</h3>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <Input label="Capital (k€)" value={formatInput(inputs.capital_inicial!)} onChange={e => handleInputChange(e, 'capital_inicial')} tooltip="Capital o ahorros líquidos iniciales al comienzo de la simulación." />
-                                    <Input label="TIR (%)" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} tooltip="Rentabilidad anual esperada de los ahorros e inversiones líquidas." />
-                                    <Input label="TIR Inmo. (%)" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} tooltip="Tasa de revalorización anual esperada del precio de la vivienda." />
-                                    <Input label="Inflacción (%)" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} tooltip="Tasa de inflación anual prevista para el ajuste de precios y valores reales." />
+                                    <Input label="Capital" suffix="k€" value={formatInput(inputs.capital_inicial!)} onChange={e => handleInputChange(e, 'capital_inicial')} tooltip="Capital o ahorros líquidos iniciales al comienzo de la simulación." />
+                                    <Input label="TIR" suffix="%" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} tooltip="Rentabilidad anual esperada de los ahorros e inversiones líquidas." />
+                                    <Input label="TIR Inmo." suffix="%" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} tooltip="Tasa de revalorización anual esperada del precio de la vivienda." />
+                                    <Input label="Inflacción" suffix="%" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} tooltip="Tasa de inflación anual prevista para el ajuste de precios y valores reales." />
                                 </div>
                             </div>
                         </div>
@@ -1012,7 +1167,8 @@ export default function SimuladorVida() {
                                                 <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
                                                 <Line type="monotone" dataKey="fondos" name="Fondos (real) (Compra)" stroke="#666666" strokeWidth={2} dot={false} legendType="line" />
                                                 <Line type="monotone" dataKey="patrimonio" name="Patrimonio (real) (Compra)" stroke="#ffffff" strokeWidth={2} dot={false} legendType="line" />
-                                                <Line type="monotone" dataKey="fondosAlquiler" name="Fondos (real) (Alquiler)" stroke="#bbbbbb" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
+                                                <Line type="monotone" dataKey="fondosAlquiler" name="Fondos (real) (Alquiler)" stroke="#94a3b8" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
+                                                <Line type="monotone" dataKey="patrimonioAlquiler" name="Patrimonio (real) (Alquiler)" stroke="#cbd5e1" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -1181,7 +1337,8 @@ export default function SimuladorVida() {
                                                 <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
                                                 <Line type="monotone" dataKey="fondos" name="Fondos (real) (Compra)" stroke="#666666" strokeWidth={2} dot={false} legendType="line" />
                                                 <Line type="monotone" dataKey="patrimonio" name="Patrimonio (real) (Compra)" stroke="#ffffff" strokeWidth={2} dot={false} legendType="line" />
-                                                <Line type="monotone" dataKey="fondosAlquiler" name="Fondos (real) (Alquiler)" stroke="#bbbbbb" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
+                                                <Line type="monotone" dataKey="fondosAlquiler" name="Fondos (real) (Alquiler)" stroke="#94a3b8" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
+                                                <Line type="monotone" dataKey="patrimonioAlquiler" name="Patrimonio (real) (Alquiler)" stroke="#cbd5e1" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>

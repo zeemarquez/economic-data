@@ -15,6 +15,7 @@ export interface InputsModeloVida {
     year_compra_vivienda: number;
     ingresos_trabajo_brutos_y0: number;
     ingresos_trabajo_brutos_y15: number;
+    ingresos_tabla?: { year: number; ingresos: number }[];
 
     porcentaje_gastos_fijos_vivienda?: number;
     porcentaje_entrada_vivienda?: number;
@@ -28,6 +29,7 @@ export interface InputsModeloVida {
     ayuda_entrada?: number;
     liquido_minimo?: number;
     descuentos_educacion?: boolean;
+    crecimiento_salario?: number;
 }
 
 export interface RowMetadata {
@@ -54,6 +56,7 @@ export function runModeloVida(inputs: InputsModeloVida) {
     const ayuda_entrada = inputs.ayuda_entrada ?? 0;
     const liquido_minimo = inputs.liquido_minimo ?? 5;
     const descuentos_educacion = inputs.descuentos_educacion ?? true;
+    const crecimiento_salario = inputs.crecimiento_salario ?? inflaccion;
 
     const getPeriod = (t: number) => initial_period + t;
 
@@ -166,13 +169,41 @@ export function runModeloVida(inputs: InputsModeloVida) {
     const arr_total_familia = makeArr(t => arr_educacion[t] + arr_alimentacion[t] + arr_ocio[t] + arr_vestimenta[t] + arr_otros_gastos_hijos[t]);
     const arr_total_familia_inf = makeArr(t => arr_total_familia[t] * (1 + inflaccion_acumulada[t]));
 
+    // Salary growth (independent from CPI inflation)
+    const arr_crecimiento_salario = makeArr(() => crecimiento_salario);
+    const arr_crecimiento_salario_acumulado = new Array(periods).fill(0);
+    arr_crecimiento_salario_acumulado[0] = arr_crecimiento_salario[0];
+    for (let t = 1; t < periods; t++) {
+        arr_crecimiento_salario_acumulado[t] = (1 + arr_crecimiento_salario[t]) * (1 + arr_crecimiento_salario_acumulado[t - 1]) - 1;
+    }
+
     const arr_ingresos_brutos_nominal = makeArr(t => {
+        const tabla = inputs.ingresos_tabla;
+        if (tabla && tabla.length > 0) {
+            // Sort points by year
+            const pts = [...tabla].sort((a, b) => a.year - b.year);
+            const year = getPeriod(t);
+            // Before first point: constant extrapolation
+            if (year <= pts[0].year) return pts[0].ingresos;
+            // After last point: constant extrapolation
+            if (year >= pts[pts.length - 1].year) return pts[pts.length - 1].ingresos;
+            // Find surrounding segment and interpolate linearly
+            for (let i = 0; i < pts.length - 1; i++) {
+                if (year >= pts[i].year && year < pts[i + 1].year) {
+                    const frac = (year - pts[i].year) / (pts[i + 1].year - pts[i].year);
+                    return pts[i].ingresos + frac * (pts[i + 1].ingresos - pts[i].ingresos);
+                }
+            }
+            return pts[pts.length - 1].ingresos;
+        }
+        // Fallback: original Y0/Y15 linear model
         const s0 = inputs.ingresos_trabajo_brutos_y0;
         const s15 = inputs.ingresos_trabajo_brutos_y15;
         if (t >= 15) return s15;
         return s0 + t * (s15 - s0) / 15;
     });
-    const arr_ingresos_brutos_real = makeArr(t => arr_ingresos_brutos_nominal[t] * (1 + inflaccion_acumulada[t]));
+    // Real income uses dedicated salary growth (not general CPI)
+    const arr_ingresos_brutos_real = makeArr(t => arr_ingresos_brutos_nominal[t] * (1 + arr_crecimiento_salario_acumulado[t]));
 
     const arr_jubilado = makeArr(t => getPeriod(t) >= year_jubilacion ? 1 : 0);
     const arr_ingresos_totales = makeArr(t => arr_ingresos_brutos_real[t] * (1 - arr_jubilado[t]));
@@ -267,8 +298,10 @@ export function runModeloVida(inputs: InputsModeloVida) {
         { group: 'Familia', name: 'Vestimenta', values: arr_vestimenta },
         { group: 'Familia', name: 'Otros gastos hijos', values: arr_otros_gastos_hijos },
         { group: 'Familia', name: 'Total familia', values: arr_total_familia },
-        { group: 'Familia', name: 'Total familia inf', values: arr_total_familia_inf, highlight: true },
+        { group: 'Familia', name: 'Total familia real', values: arr_total_familia_inf, highlight: true },
         { group: 'P&G', name: 'Ingresos brutos nominal', values: arr_ingresos_brutos_nominal },
+        { group: 'P&G', name: 'Crecimiento salario', values: arr_crecimiento_salario, format: 'percentage' },
+        { group: 'P&G', name: 'Crecimiento salario acumulado', values: arr_crecimiento_salario_acumulado, format: 'percentage' },
         { group: 'P&G', name: 'Ingresos brutos real', values: arr_ingresos_brutos_real },
         { group: 'P&G', name: 'Jubilado', values: arr_jubilado, format: 'boolean' },
         { group: 'P&G', name: 'Ingresos totales', values: arr_ingresos_totales },
