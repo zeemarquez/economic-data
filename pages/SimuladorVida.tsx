@@ -12,7 +12,7 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip as ChartTooltip,
+    Tooltip as RechartsTooltip,
     Legend,
     ResponsiveContainer,
     Cell
@@ -55,7 +55,7 @@ const formatInput = (val: number) => {
     return Number(val.toFixed(1)).toString();
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomChartTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-black/90 border border-white/10 p-3 rounded-lg shadow-xl backdrop-blur-md">
@@ -441,6 +441,233 @@ function MetodologiaPanel() {
     );
 }
 
+function CalculadoraJubilacionPanel({ baseInputs }: { baseInputs: InputsModeloVida }) {
+    const [esperanzaVida, setEsperanzaVida] = useState<number | string>(2080);
+    const [herenciaDeseada, setHerenciaDeseada] = useState<number | string>(2000);
+
+    const result = useMemo(() => {
+        let bestYear: number | null = null;
+        let finalPatrimonio = 0;
+        let finalHerenciaTarget = 0;
+
+        let espVidaNum = typeof esperanzaVida === 'number' ? esperanzaVida : parseInt(esperanzaVida) || 0;
+        let herenciaNum = typeof herenciaDeseada === 'number' ? herenciaDeseada : parseFloat(herenciaDeseada) || 0;
+
+        const initial_period = 2026;
+        const max_t = 59;
+        let t_final = espVidaNum - initial_period;
+        if (t_final < 0) t_final = 0;
+        if (t_final > max_t) t_final = max_t;
+
+        for (let j = 2026; j <= espVidaNum; j++) {
+            const tryInputs = { ...baseInputs, year_jubilacion: j };
+            const model = runModeloVida(tryInputs);
+
+            const inflacionAcumulada = model.inflaccion_acumulada[t_final];
+            const herenciaTarget = herenciaNum * (1 + inflacionAcumulada);
+            const patrimonioReal = model.arr_patrimonio_real[t_final];
+
+            if (model.is_possible && patrimonioReal >= herenciaTarget) {
+                bestYear = j;
+                finalPatrimonio = patrimonioReal;
+                finalHerenciaTarget = herenciaTarget;
+                break;
+            }
+        }
+
+        return { bestYear, finalPatrimonio, finalHerenciaTarget };
+    }, [baseInputs, esperanzaVida, herenciaDeseada]);
+
+    return (
+        <div className="col-span-1 lg:col-span-12">
+            <Card
+                className="border-white/20"
+                icon={<Calculator size={18} />}
+                title="Calculadora Año Mínimo de Jubilación"
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+                    <div className="flex flex-col gap-6">
+                        <p className="text-sm text-neutral-400 font-mono mb-2">
+                            Calcula el primer año en el que te podrías jubilar asegurando la viabilidad del modelo y dejando la herencia deseada.
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input
+                                label="Fallecimiento (Año)"
+                                value={String(esperanzaVida)}
+                                onChange={e => setEsperanzaVida(e.target.value)}
+                                tooltip="Año en el que esperas fallecer (para evaluar el patrimonio final)."
+                            />
+                            <Input
+                                label="Herencia (k€)"
+                                value={String(herenciaDeseada)}
+                                onChange={e => setHerenciaDeseada(e.target.value)}
+                                tooltip="Patrimonio que quieres dejar en herencia, en valor actual (hoy)."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center bg-black/30 rounded-xl border border-white/5 p-6">
+                        {result.bestYear ? (
+                            <>
+                                <h4 className="text-neutral-500 font-mono text-xs uppercase tracking-widest mb-3">Año mínimo sugerido</h4>
+                                <div className="text-5xl font-bold text-white font-mono mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">{result.bestYear}</div>
+                                <div className="flex flex-col gap-3 w-full border-t border-white/10 pt-5">
+                                    <div className="flex justify-between items-center text-xs font-mono">
+                                        <span className="text-neutral-400 uppercase tracking-wider">Patrimonio final (ajustado):</span>
+                                        <span className="text-white font-bold">{formatCurrency(result.finalPatrimonio)} k€</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs font-mono">
+                                        <span className="text-neutral-400 uppercase tracking-wider">Herencia objetivo (ajustada):</span>
+                                        <span className="text-white font-bold">{formatCurrency(result.finalHerenciaTarget)} k€</span>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-6">
+                                <div className="text-2xl font-bold text-red-500 font-mono mb-3">No Viable</div>
+                                <div className="text-xs text-neutral-500 font-mono max-w-[250px] leading-relaxed mx-auto">
+                                    Con los parámetros actuales, no existe ningún año de jubilación que cumpla los requisitos de viabilidad y herencia.
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </Card>
+        </div>
+    );
+}
+
+function CalculadoraViviendaPanel({ baseInputs }: { baseInputs: InputsModeloVida }) {
+    const [modo, setModo] = useState<'compra' | 'alquiler'>('compra');
+    const [yearCompra, setYearCompra] = useState<number | string>(baseInputs.year_compra_vivienda);
+    const [ayudaEntrada, setAyudaEntrada] = useState<number | string>(baseInputs.ayuda_entrada || 0);
+
+    const result = useMemo(() => {
+        let maxAffordable: number | null = null;
+
+        let yearCompraNum = typeof yearCompra === 'number' ? yearCompra : parseInt(yearCompra) || 2032;
+        let ayudaNum = typeof ayudaEntrada === 'number' ? ayudaEntrada : parseFloat(ayudaEntrada) || 0;
+
+        if (modo === 'compra') {
+            for (let p = 0; p <= 3000; p += 10) {
+                const tryInputs = {
+                    ...baseInputs,
+                    year_compra_vivienda: yearCompraNum,
+                    ayuda_entrada: ayudaNum,
+                    precio_vivienda: p
+                };
+                const model = runModeloVida(tryInputs);
+                if (model.is_possible) {
+                    maxAffordable = p;
+                } else {
+                    break;
+                }
+            }
+        } else {
+            for (let a = 0; a <= 15000; a += 50) {
+                const tryInputs = {
+                    ...baseInputs,
+                    year_compra_vivienda: 3000,
+                    ayuda_entrada: 0,
+                    alquiler_mensual: a
+                };
+                const model = runModeloVida(tryInputs);
+                if (model.is_possible) {
+                    maxAffordable = a;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return { maxAffordable };
+    }, [baseInputs, modo, yearCompra, ayudaEntrada]);
+
+    return (
+        <div className="col-span-1 lg:col-span-12">
+            <Card
+                className="border-white/20"
+                icon={<Calculator size={18} />}
+                title="Calculadora Vivienda (Máximo Asequible)"
+                headerAside={
+                    <div className="flex bg-neutral-900/50 rounded p-0.5 border border-white/5">
+                        <button
+                            className={`px-3 py-1 text-[10px] font-mono uppercase tracking-wider rounded transition-colors ${modo === 'compra' ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                            onClick={() => setModo('compra')}
+                        >
+                            Compra
+                        </button>
+                        <button
+                            className={`px-3 py-1 text-[10px] font-mono uppercase tracking-wider rounded transition-colors ${modo === 'alquiler' ? 'bg-white/10 text-white shadow-sm' : 'text-neutral-500 hover:text-white'}`}
+                            onClick={() => setModo('alquiler')}
+                        >
+                            Alquiler
+                        </button>
+                    </div>
+                }
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+                    <div className="flex flex-col gap-6">
+                        <p className="text-sm text-neutral-400 font-mono mb-2">
+                            {modo === 'compra'
+                                ? 'Calcula el precio máximo de vivienda que te puedes permitir comprar en el año indicado, dadas las condiciones actuales.'
+                                : 'Calcula el alquiler mensual máximo que te puedes permitir pagar durante toda la simulación (asumiendo que nunca se compra).'}
+                        </p>
+                        {modo === 'compra' && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Input
+                                    label="Año Compra"
+                                    value={String(yearCompra)}
+                                    onChange={e => setYearCompra(e.target.value)}
+                                    tooltip="Año en el que se realizará la compra de la vivienda."
+                                />
+                                <Input
+                                    label="Ayuda Entrada (k€)"
+                                    value={String(ayudaEntrada)}
+                                    onChange={e => setAyudaEntrada(e.target.value)}
+                                    tooltip="Ayuda financiera extra recibida en el momento de la compra."
+                                />
+                            </div>
+                        )}
+                        {modo === 'alquiler' && (
+                            <div className="text-xs text-neutral-500 font-mono">
+                                Modo alquiler permanente: asume que no hay gastos de compra ni ayudas para entrada, y se paga alquiler mensual (ajustado por inflación) hasta el final del modelo.
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center bg-black/30 rounded-xl border border-white/5 p-6">
+                        {result.maxAffordable !== null ? (
+                            <>
+                                <h4 className="text-neutral-500 font-mono text-xs uppercase tracking-widest mb-3">
+                                    {modo === 'compra' ? 'Precio máximo (k€)' : 'Alquiler máximo (€/mes)'}
+                                </h4>
+                                <div className="text-5xl font-bold text-white font-mono mb-6 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                                    {modo === 'compra'
+                                        ? formatCurrency(result.maxAffordable)
+                                        : formatCurrency(result.maxAffordable)}
+                                </div>
+                                <div className="flex flex-col gap-3 w-full border-t border-white/10 pt-5">
+                                    <div className="text-xs text-neutral-400 font-mono text-center">
+                                        Mantiene la viabilidad a lo largo de todos los periodos del modelo.
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-6">
+                                <div className="text-2xl font-bold text-red-500 font-mono mb-3">No Viable</div>
+                                <div className="text-xs text-neutral-500 font-mono max-w-[250px] leading-relaxed mx-auto">
+                                    Con los parámetros actuales, el modelo no es viable ni siquiera asumiendo un coste {modo === 'compra' ? 'de vivienda' : 'de alquiler'} de cero. Revisa los gastos base frente a tus ingresos.
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </Card>
+        </div>
+    );
+}
+
 export default function SimuladorVida() {
     const [inputs, setInputs] = useState<InputsModeloVida>(defaultInputs);
     const [tab, setTab] = useState<'charts' | 'table'>('charts');
@@ -649,7 +876,7 @@ export default function SimuladorVida() {
                                                 <Input label="Gastos/Hijo (€/mes)" value={formatInput(gastosHijoMesSimple)} onChange={e => {
                                                     const v = parseFloat(e.target.value);
                                                     if (!isNaN(v)) setGastosHijoMesSimple(v);
-                                                }} tooltip="Gasto mensual estimado por cada hijo (incluyendo alimentación, ocio, vestimenta y otros)." />
+                                                }} tooltip="Gasto mensual estimado por cada hijo excluyendo educación (alimentación, ocio, vestimenta y otros)." />
                                             </div>
                                         </>
                                     ) : (
@@ -751,7 +978,7 @@ export default function SimuladorVida() {
                                                 <XAxis dataKey="year" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
                                                 <YAxis yAxisId="left" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
                                                 <YAxis yAxisId="right" orientation="right" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
-                                                <Tooltip content={<CustomTooltip />} />
+                                                <RechartsTooltip content={<CustomChartTooltip />} />
                                                 <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
                                                 <Bar yAxisId="right" dataKey="resultado" name="Resultado (neto)" barSize={20}>
                                                     {chartData.map((entry, index) => (
@@ -770,7 +997,7 @@ export default function SimuladorVida() {
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                                                 <XAxis dataKey="year" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
                                                 <YAxis stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
-                                                <Tooltip content={<CustomTooltip />} />
+                                                <RechartsTooltip content={<CustomChartTooltip />} />
                                                 <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
                                                 <Line type="monotone" dataKey="fondos" name="Fondos (real) (Compra)" stroke="#666666" strokeWidth={2} dot={false} legendType="line" />
                                                 <Line type="monotone" dataKey="patrimonio" name="Patrimonio (real) (Compra)" stroke="#ffffff" strokeWidth={2} dot={false} legendType="line" />
@@ -860,6 +1087,12 @@ export default function SimuladorVida() {
                         </div>
                     </Card>
                 </div>
+
+                {/* CALCULADORA JUBILACION PANEL */}
+                <CalculadoraJubilacionPanel baseInputs={effectiveInputs} />
+
+                {/* CALCULADORA VIVIENDA PANEL */}
+                <CalculadoraViviendaPanel baseInputs={effectiveInputs} />
 
                 {/* METODOLOGÍA PANEL */}
                 <MetodologiaPanel />

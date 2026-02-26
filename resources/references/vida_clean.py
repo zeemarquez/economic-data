@@ -317,8 +317,7 @@ esperanza_de_vida = 2078
 herencia_nominal = 2000
 t_final = esperanza_de_vida - model.initial_period
 
-inputs_jubilacion = copy.deepcopy(inputs_alquiler)
-inputs_jubilacion.alquiler_mensual = 2500
+inputs_jubilacion = copy.deepcopy(inputs)
 
 for jubilacion in range(2027, esperanza_de_vida):
 
