@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Calculator, LineChart as ChartIcon, LayoutDashboard, ChevronDown, ChevronRight, BookOpen, Info } from 'lucide-react';
+import { ArrowLeft, Calculator, LineChart as ChartIcon, LayoutDashboard, ChevronDown, ChevronRight, BookOpen, Info, Maximize2, Minimize2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Tooltip } from '../components/ui/Tooltip';
@@ -672,6 +672,7 @@ export default function SimuladorVida() {
     const [inputs, setInputs] = useState<InputsModeloVida>(defaultInputs);
     const [tab, setTab] = useState<'charts' | 'table'>('charts');
     const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({ Macro: true, Vivienda: true, Familia: true, 'P&G': true, Patrimonio: true });
+    const [dashboardExpanded, setDashboardExpanded] = useState(false);
 
     const [modoSimple, setModoSimple] = useState(false);
     const [tipoColegio, setTipoColegio] = useState<'publico' | 'privado'>('privado');
@@ -932,24 +933,34 @@ export default function SimuladorVida() {
                         icon={<LayoutDashboard size={18} />}
                         title="Dashboard Financiero"
                         headerAside={
-                            <Tooltip
-                                text={modelResult.is_possible
-                                    ? 'Proyección viable: los fondos son suficientes para cubrir todos los gastos en todos los periodos de la simulación.'
-                                    : 'Proyección no viable: en al menos un periodo los fondos disponibles no son suficientes para cubrir el déficit. Los fondos y el patrimonio colapsan a 0 desde ese punto.'}
-                            >
-                                <div
-                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-[10px] uppercase tracking-widest font-bold transition-all cursor-help ${modelResult.is_possible
-                                        ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                                        : 'bg-red-500/10 border-red-500/30 text-red-400'
-                                        }`}
+                            <div className="flex items-center gap-2">
+                                <Tooltip
+                                    text={modelResult.is_possible
+                                        ? 'Proyección viable: los fondos son suficientes para cubrir todos los gastos en todos los periodos de la simulación.'
+                                        : 'Proyección no viable: en al menos un periodo los fondos disponibles no son suficientes para cubrir el déficit. Los fondos y el patrimonio colapsan a 0 desde ese punto.'}
                                 >
-                                    <span
-                                        className={`w-1.5 h-1.5 rounded-full animate-pulse ${modelResult.is_possible ? 'bg-green-400' : 'bg-red-400'
+                                    <div
+                                        className={`flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-[10px] uppercase tracking-widest font-bold transition-all cursor-help ${modelResult.is_possible
+                                            ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                                            : 'bg-red-500/10 border-red-500/30 text-red-400'
                                             }`}
-                                    />
-                                    {modelResult.is_possible ? 'Viable' : 'No Viable'}
-                                </div>
-                            </Tooltip>
+                                    >
+                                        <span
+                                            className={`w-1.5 h-1.5 rounded-full animate-pulse ${modelResult.is_possible ? 'bg-green-400' : 'bg-red-400'
+                                                }`}
+                                        />
+                                        {modelResult.is_possible ? 'Viable' : 'No Viable'}
+                                    </div>
+                                </Tooltip>
+                                <button
+                                    onClick={() => setDashboardExpanded(e => !e)}
+                                    className="p-1.5 rounded-lg border border-white/10 text-neutral-500 hover:text-white hover:bg-white/5 hover:border-white/20 transition-all"
+                                    aria-label={dashboardExpanded ? 'Contraer dashboard' : 'Expandir dashboard a pantalla completa'}
+                                    title={dashboardExpanded ? 'Contraer' : 'Pantalla completa'}
+                                >
+                                    <Maximize2 size={13} />
+                                </button>
+                            </div>
                         }
                     >
                         <div className="flex gap-4 mb-6 border-b border-white/10 pb-2">
@@ -1088,6 +1099,173 @@ export default function SimuladorVida() {
                     </Card>
                 </div>
 
+                {/* FULLSCREEN DASHBOARD OVERLAY */}
+                {dashboardExpanded && (
+                    <div
+                        className="fixed inset-0 z-50 bg-neutral-950/95 backdrop-blur-md flex flex-col p-6 overflow-hidden"
+                        style={{ animation: 'fadeIn 0.18s ease' }}
+                    >
+                        {/* Overlay header */}
+                        <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-4 shrink-0">
+                            <div className="flex items-center gap-3">
+                                <LayoutDashboard size={18} className="text-neutral-400" />
+                                <span className="font-mono text-sm uppercase tracking-widest text-white">Dashboard Financiero</span>
+                                <div
+                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-[10px] uppercase tracking-widest font-bold ${modelResult.is_possible
+                                        ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                                        : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                        }`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${modelResult.is_possible ? 'bg-green-400' : 'bg-red-400'}`} />
+                                    {modelResult.is_possible ? 'Viable' : 'No Viable'}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setDashboardExpanded(false)}
+                                className="p-2 rounded-lg border border-white/10 text-neutral-400 hover:text-white hover:bg-white/5 hover:border-white/20 transition-all flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider"
+                                aria-label="Cerrar pantalla completa"
+                            >
+                                <Minimize2 size={13} />
+                                <span>Contraer</span>
+                            </button>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex gap-4 mb-4 border-b border-white/10 pb-2 shrink-0">
+                            <button
+                                className={`font-mono text-sm uppercase tracking-wider pb-2 border-b-2 transition-colors ${tab === 'charts' ? 'border-primary text-white' : 'border-transparent text-neutral-500 hover:text-white'}`}
+                                onClick={() => setTab('charts')}
+                            >
+                                Gráficas
+                            </button>
+                            <button
+                                className={`font-mono text-sm uppercase tracking-wider pb-2 border-b-2 transition-colors ${tab === 'table' ? 'border-primary text-white' : 'border-transparent text-neutral-500 hover:text-white'}`}
+                                onClick={() => setTab('table')}
+                            >
+                                Tabla Completa
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 overflow-hidden">
+                            {tab === 'charts' ? (
+                                <div className="h-full flex flex-col gap-8 overflow-y-auto pr-2 custom-scrollbar">
+                                    <div className="h-[45%] min-h-[280px] w-full">
+                                        <h3 className="text-white font-mono text-sm mb-4">Patrimonio vs Fondos y Resultado</h3>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                                <XAxis dataKey="year" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
+                                                <YAxis yAxisId="left" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
+                                                <YAxis yAxisId="right" orientation="right" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
+                                                <RechartsTooltip content={<CustomChartTooltip />} />
+                                                <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
+                                                <Bar yAxisId="right" dataKey="resultado" name="Resultado (neto)" barSize={20}>
+                                                    {chartData.map((entry, index) => (
+                                                        <Cell key={`cell-${index}`} fill={entry.resultado >= 0 ? '#4ade80' : '#f87171'} fillOpacity={0.3} />
+                                                    ))}
+                                                </Bar>
+                                                <Line yAxisId="left" type="monotone" dataKey="fondos" name="Fondos (real)" stroke="#444444" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="patrimonio" name="Patrimonio (real)" stroke="#ffffff" strokeWidth={2} dot={false} />
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="h-[45%] min-h-[280px] w-full">
+                                        <h3 className="text-white font-mono text-sm mb-4">Alquiler vs Comprar</h3>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                                                <XAxis dataKey="year" stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
+                                                <YAxis stroke="#ffffff50" tick={{ fill: '#ffffff50', fontSize: 12, fontFamily: 'monospace' }} />
+                                                <RechartsTooltip content={<CustomChartTooltip />} />
+                                                <Legend wrapperStyle={{ fontFamily: 'monospace', fontSize: 10, paddingTop: 10 }} />
+                                                <Line type="monotone" dataKey="fondos" name="Fondos (real) (Compra)" stroke="#666666" strokeWidth={2} dot={false} legendType="line" />
+                                                <Line type="monotone" dataKey="patrimonio" name="Patrimonio (real) (Compra)" stroke="#ffffff" strokeWidth={2} dot={false} legendType="line" />
+                                                <Line type="monotone" dataKey="fondosAlquiler" name="Fondos (real) (Alquiler)" stroke="#bbbbbb" strokeDasharray="5 5" strokeWidth={2} dot={false} legendType="plainline" />
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="h-full overflow-auto custom-scrollbar border border-white/5 rounded">
+                                    <table className="w-full text-left border-collapse min-w-max">
+                                        <thead className="sticky top-0 bg-neutral-900 border-b border-white/10 z-10">
+                                            <tr>
+                                                <th className="p-2 text-white font-mono text-xs whitespace-nowrap sticky left-0 bg-neutral-900 z-20">Concepto</th>
+                                                {Array.from({ length: modelResult.periods }).map((_, i) => (
+                                                    <th key={i} className="p-2 text-neutral-400 font-mono text-xs font-normal text-right min-w-[60px]">
+                                                        {modelResult.getPeriod(i)}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        {Object.entries(groupedData).map(([groupName, rows]) => (
+                                            <tbody key={groupName} className="divide-y divide-white/5">
+                                                <tr
+                                                    className="cursor-pointer bg-white/5 hover:bg-white/10 transition-colors border-y border-white/10"
+                                                    onClick={() => setExpandedGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }))}
+                                                >
+                                                    <td className="p-2 font-mono text-xs font-bold tracking-widest uppercase whitespace-nowrap sticky left-0 z-20 bg-neutral-800 text-white border-r border-white/5">
+                                                        <div className="flex items-center gap-2">
+                                                            {expandedGroups[groupName] ? <ChevronDown size={14} className="text-neutral-400" /> : <ChevronRight size={14} className="text-neutral-400" />}
+                                                            {groupName}
+                                                        </div>
+                                                    </td>
+                                                    <td colSpan={modelResult.periods} className="p-2 bg-neutral-900/50"></td>
+                                                </tr>
+                                                {expandedGroups[groupName] && (rows as any[]).map((row) => {
+                                                    const { name, values, format, highlight } = row;
+                                                    return (
+                                                        <tr key={name} className={`hover:bg-white/5 group/row relative ${highlight ? 'bg-white/5 font-bold border-y border-white/10' : ''}`}>
+                                                            <td className={`p-2 font-mono text-xs whitespace-nowrap sticky left-0 z-20 ${highlight ? 'bg-neutral-800 text-white' : 'bg-black/80 text-neutral-300'}`}>
+                                                                <div className="pl-6">
+                                                                    {CONCEPT_TOOLTIPS[name] ? (
+                                                                        <Tooltip text={CONCEPT_TOOLTIPS[name]}>
+                                                                            <span>{name}</span>
+                                                                        </Tooltip>
+                                                                    ) : (
+                                                                        <span>{name}</span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            {(values as number[]).map((v: number, i: number) => {
+                                                                let displayValue = '';
+                                                                let cellColorClass = '';
+                                                                if (format === 'percentage') {
+                                                                    displayValue = `${(v * 100).toFixed(1)}%`;
+                                                                    cellColorClass = v < 0 ? 'text-red-400' : (highlight ? 'text-white' : 'text-neutral-400');
+                                                                } else if (format === 'boolean') {
+                                                                    const isSi = v > 0.5;
+                                                                    displayValue = isSi ? 'SÍ' : 'NO';
+                                                                    cellColorClass = isSi ? 'text-green-400' : 'text-red-400';
+                                                                } else {
+                                                                    const absV = Math.abs(v);
+                                                                    if (absV < 0.1) {
+                                                                        displayValue = '-';
+                                                                    } else {
+                                                                        const formatted = formatCurrency(absV);
+                                                                        displayValue = v < 0 ? `(${formatted})` : formatted;
+                                                                    }
+                                                                    cellColorClass = v < 0 ? 'text-red-400' : (highlight ? 'text-white' : 'text-neutral-400');
+                                                                }
+                                                                return (
+                                                                    <td key={i} className={`p-2 font-mono text-xs text-right tabular-nums ${cellColorClass}`}>
+                                                                        {displayValue}
+                                                                    </td>
+                                                                );
+                                                            })}
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        ))}
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* CALCULADORA JUBILACION PANEL */}
                 <CalculadoraJubilacionPanel baseInputs={effectiveInputs} />
 
@@ -1114,6 +1292,10 @@ export default function SimuladorVida() {
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.2);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.99); }
+          to   { opacity: 1; transform: scale(1); }
         }
       `}</style>
         </div>
