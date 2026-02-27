@@ -129,12 +129,17 @@ export function runModeloVida(inputs: InputsModeloVida) {
     const arr_alquiler = makeArr(t => (inputs.year_indepen <= getPeriod(t) && getPeriod(t) < inputs.year_compra_vivienda) ? -inputs.alquiler_mensual * 12 / 1000 : 0);
     const arr_alquiler_inf = makeArr(t => arr_alquiler[t] * (1 + inflaccion_acumulada[t]));
 
-    const arr_vivienda_recurrente = makeArr(t => arr_hipoteca_cuota[t] + arr_gastos_fijos_inf[t] + arr_alquiler_inf[t]);
+    // inf = ajustado a inflación = real. Nominal = valores base (cuota, gastos fijos, alquiler sin ajustar).
+    // Vivienda recurrente nominal = cuota + gastos fijos + alquiler (todo nominal).
+    const arr_vivienda_recurrente_nominal = makeArr(t => arr_hipoteca_cuota[t] + arr_gastos_fijos[t] + arr_alquiler[t]);
+    // Vivienda recurrente real = cuota (no cambia con inflación) + gastos fijos inf + alquiler inf.
+    const arr_vivienda_recurrente_real = makeArr(t => arr_hipoteca_cuota[t] + arr_gastos_fijos_inf[t] + arr_alquiler_inf[t]);
 
     const arr_otros_gastos_compra = makeArr(t => getPeriod(t) === inputs.year_compra_vivienda ? -inputs.precio_vivienda * 0.10 : 0);
     const arr_vivienda_extra = makeArr(t => arr_entrada_hipoteca[t] + arr_otros_gastos_compra[t]);
 
-    const arr_total_vivienda = makeArr(t => arr_vivienda_recurrente[t] + arr_vivienda_extra[t]);
+    const arr_total_vivienda_nominal = makeArr(t => arr_vivienda_recurrente_nominal[t] + arr_vivienda_extra[t]);
+    const arr_total_vivienda_real = makeArr(t => arr_vivienda_recurrente_real[t] + arr_vivienda_extra[t]);
 
     const arr_independizado = makeArr(t => getPeriod(t) >= inputs.year_indepen ? 1 : 0);
     const arr_padres = makeArr(() => 2);
@@ -177,41 +182,43 @@ export function runModeloVida(inputs: InputsModeloVida) {
         arr_crecimiento_salario_acumulado[t] = (1 + arr_crecimiento_salario[t]) * (1 + arr_crecimiento_salario_acumulado[t - 1]) - 1;
     }
 
+    const arr_jubilado = makeArr(t => getPeriod(t) >= year_jubilacion ? 1 : 0);
+
     const arr_ingresos_brutos_nominal = makeArr(t => {
         const tabla = inputs.ingresos_tabla;
+        let raw = 0;
         if (tabla && tabla.length > 0) {
             // Sort points by year
             const pts = [...tabla].sort((a, b) => a.year - b.year);
             const year = getPeriod(t);
             // Before first point: constant extrapolation
-            if (year <= pts[0].year) return pts[0].ingresos;
-            // After last point: constant extrapolation
-            if (year >= pts[pts.length - 1].year) return pts[pts.length - 1].ingresos;
-            // Find surrounding segment and interpolate linearly
-            for (let i = 0; i < pts.length - 1; i++) {
-                if (year >= pts[i].year && year < pts[i + 1].year) {
-                    const frac = (year - pts[i].year) / (pts[i + 1].year - pts[i].year);
-                    return pts[i].ingresos + frac * (pts[i + 1].ingresos - pts[i].ingresos);
+            if (year <= pts[0].year) raw = pts[0].ingresos;
+            else if (year >= pts[pts.length - 1].year) raw = pts[pts.length - 1].ingresos;
+            else {
+                for (let i = 0; i < pts.length - 1; i++) {
+                    if (year >= pts[i].year && year < pts[i + 1].year) {
+                        const frac = (year - pts[i].year) / (pts[i + 1].year - pts[i].year);
+                        raw = pts[i].ingresos + frac * (pts[i + 1].ingresos - pts[i].ingresos);
+                        break;
+                    }
                 }
             }
-            return pts[pts.length - 1].ingresos;
+        } else {
+            const s0 = inputs.ingresos_trabajo_brutos_y0;
+            const s15 = inputs.ingresos_trabajo_brutos_y15;
+            raw = t >= 15 ? s15 : s0 + t * (s15 - s0) / 15;
         }
-        // Fallback: original Y0/Y15 linear model
-        const s0 = inputs.ingresos_trabajo_brutos_y0;
-        const s15 = inputs.ingresos_trabajo_brutos_y15;
-        if (t >= 15) return s15;
-        return s0 + t * (s15 - s0) / 15;
+        return raw * (1 - arr_jubilado[t]);
     });
     // Real income uses dedicated salary growth (not general CPI)
     const arr_ingresos_brutos_real = makeArr(t => arr_ingresos_brutos_nominal[t] * (1 + arr_crecimiento_salario_acumulado[t]));
-
-    const arr_jubilado = makeArr(t => getPeriod(t) >= year_jubilacion ? 1 : 0);
     const arr_ingresos_totales = makeArr(t => arr_ingresos_brutos_real[t] * (1 - arr_jubilado[t]));
     const arr_tasa_impositiva = makeArr(() => tasa_impositiva_salario);
     const arr_ingresos_netos = makeArr(t => arr_ingresos_totales[t] - arr_ingresos_totales[t] * arr_tasa_impositiva[t]);
 
-    const arr_gastos_vivienda = makeArr(t => arr_vivienda_recurrente[t] + arr_vivienda_extra[t]);
-    const arr_gastos_totales = makeArr(t => arr_total_familia_inf[t] + arr_gastos_vivienda[t]);
+    const arr_gastos_vivienda_nominal = makeArr(t => arr_total_vivienda_nominal[t]);
+    const arr_gastos_vivienda_real = makeArr(t => arr_total_vivienda_real[t]);
+    const arr_gastos_totales = makeArr(t => arr_total_familia_inf[t] + arr_gastos_vivienda_real[t]);
 
     const arr_ayuda_entrada = makeArr(t => getPeriod(t) === inputs.year_compra_vivienda ? ayuda_entrada : 0);
 
@@ -282,10 +289,12 @@ export function runModeloVida(inputs: InputsModeloVida) {
         { group: 'Vivienda', name: 'Gastos fijos inf', values: arr_gastos_fijos_inf },
         { group: 'Vivienda', name: 'Alquiler', values: arr_alquiler },
         { group: 'Vivienda', name: 'Alquiler inf', values: arr_alquiler_inf },
-        { group: 'Vivienda', name: 'Vivienda recurrente', values: arr_vivienda_recurrente },
+        { group: 'Vivienda', name: 'Vivienda recurrente (nominal)', values: arr_vivienda_recurrente_nominal },
+        { group: 'Vivienda', name: 'Vivienda recurrente (real)', values: arr_vivienda_recurrente_real },
         { group: 'Vivienda', name: 'Otros gastos compra', values: arr_otros_gastos_compra },
         { group: 'Vivienda', name: 'Vivienda extra', values: arr_vivienda_extra },
-        { group: 'Vivienda', name: 'Total vivienda', values: arr_total_vivienda, highlight: true },
+        { group: 'Vivienda', name: 'Total vivienda (nominal)', values: arr_total_vivienda_nominal, highlight: true },
+        { group: 'Vivienda', name: 'Total vivienda (real)', values: arr_total_vivienda_real },
         { group: 'Familia', name: 'Independizado', values: arr_independizado, format: 'boolean' },
         { group: 'Familia', name: 'Padres', values: arr_padres },
         { group: 'Familia', name: 'Hijos', values: arr_hijos },
@@ -299,15 +308,16 @@ export function runModeloVida(inputs: InputsModeloVida) {
         { group: 'Familia', name: 'Otros gastos hijos', values: arr_otros_gastos_hijos },
         { group: 'Familia', name: 'Total familia', values: arr_total_familia },
         { group: 'Familia', name: 'Total familia real', values: arr_total_familia_inf, highlight: true },
+        { group: 'P&G', name: 'Jubilado', values: arr_jubilado, format: 'boolean' },
         { group: 'P&G', name: 'Ingresos brutos nominal', values: arr_ingresos_brutos_nominal },
         { group: 'P&G', name: 'Crecimiento salario', values: arr_crecimiento_salario, format: 'percentage' },
         { group: 'P&G', name: 'Crecimiento salario acumulado', values: arr_crecimiento_salario_acumulado, format: 'percentage' },
         { group: 'P&G', name: 'Ingresos brutos real', values: arr_ingresos_brutos_real },
-        { group: 'P&G', name: 'Jubilado', values: arr_jubilado, format: 'boolean' },
         { group: 'P&G', name: 'Ingresos totales', values: arr_ingresos_totales },
         { group: 'P&G', name: 'Tasa impositiva', values: arr_tasa_impositiva, format: 'percentage' },
         { group: 'P&G', name: 'Ingresos netos', values: arr_ingresos_netos },
-        { group: 'P&G', name: 'Gastos vivienda', values: arr_gastos_vivienda },
+        { group: 'P&G', name: 'Gastos vivienda (nominal)', values: arr_gastos_vivienda_nominal },
+        { group: 'P&G', name: 'Gastos vivienda (real)', values: arr_gastos_vivienda_real },
         { group: 'P&G', name: 'Gastos totales', values: arr_gastos_totales },
         { group: 'P&G', name: 'Ayuda entrada', values: arr_ayuda_entrada },
         { group: 'P&G', name: 'Resultado neto', values: arr_resultado_neto, highlight: true },
@@ -338,7 +348,8 @@ export function runModeloVida(inputs: InputsModeloVida) {
         arr_resultado_neto,
         arr_ingresos_netos,
         arr_total_familia_inf,
-        arr_gastos_vivienda,
+        arr_gastos_vivienda_nominal,
+        arr_gastos_vivienda_real,
         getPeriod,
         inflaccion_acumulada
     };

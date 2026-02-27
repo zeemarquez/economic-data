@@ -102,13 +102,15 @@ const CONCEPT_TOOLTIPS: Record<string, string> = {
     'Vivienda tir acumulada': 'Revalorización total acumulada del inmueble desde la compra.',
     'Patrimonio inmobiliario real': 'Valor de mercado neto de la vivienda ajustado por revalorización.',
     'Gastos fijos': 'Gastos de mantenimiento, IBI y comunidad (valor nominal).',
-    'Gastos fijos inf': 'Gastos de mantenimiento ajustados por la inflación acumulada.',
+    'Gastos fijos inf': 'Gastos de mantenimiento ajustados a inflación (real).',
     'Alquiler': 'Coste del alquiler mensual anualizado (valor nominal).',
-    'Alquiler inf': 'Coste del alquiler ajustado por la inflación acumulada.',
-    'Vivienda recurrente': 'Gastos habituales: Cuota hipoteca + Gastos mantenimiento + Alquiler.',
+    'Alquiler inf': 'Coste del alquiler ajustado a inflación (real).',
+    'Vivienda recurrente (nominal)': 'Gastos habituales en valores base: Cuota hipoteca + Gastos fijos + Alquiler (sin ajustar por inflación).',
+    'Vivienda recurrente (real)': 'Gastos habituales ajustados a inflación: Cuota (fija) + Gastos fijos inf + Alquiler inf.',
     'Otros gastos compra': 'Impuestos e inscripciones legales en el momento de la compra.',
     'Vivienda extra': 'Suma de la entrada inicial y los gastos legales de compra.',
-    'Total vivienda': 'Carga financiera total asociada a la vivienda en el periodo.',
+    'Total vivienda (nominal)': 'Vivienda recurrente nominal + Vivienda extra.',
+    'Total vivienda (real)': 'Vivienda recurrente real + Vivienda extra (ajustado a inflación).',
     // Familia
     'Independizado': 'Indica si se han dejado de compartir gastos con el núcleo familiar original.',
     'Padres': 'Número de adultos que componen la unidad familiar.',
@@ -130,7 +132,8 @@ const CONCEPT_TOOLTIPS: Record<string, string> = {
     'Ingresos totales': 'Salario real percibido antes de impuestos.',
     'Tasa impositiva': 'Porcentaje medio de impuestos sobre la renta aplicada.',
     'Ingresos netos': 'Dinero disponible tras pagar impuestos (en términos reales).',
-    'Gastos vivienda': 'Total de costes asociados a la vivienda en el periodo.',
+    'Gastos vivienda (nominal)': 'Total vivienda nominal (valores base, sin ajuste por inflación).',
+    'Gastos vivienda (real)': 'Total vivienda real (ajustado a inflación); es el flujo de caja efectivo.',
     'Gastos totales': 'Suma de gastos familiares y de vivienda del periodo.',
     'Ayuda entrada': 'Ingreso extraordinario recibido para facilitar la compra de vivienda.',
     'Resultado neto': 'Superávit o déficit del año (Ingresos netos - Gastos + Ayudas).',
@@ -817,7 +820,7 @@ export default function SimuladorVida() {
             patrimonio: modelResult.arr_patrimonio_real[i],
             resultado: modelResult.arr_resultado_neto[i],
             gastosFamiliaNominal: modelResult.arr_total_familia_inf[i],
-            gastosViviendaNominal: modelResult.arr_gastos_vivienda[i],
+            gastosViviendaNominal: modelResult.arr_gastos_vivienda_nominal[i],
             ingresosNetos: modelResult.arr_ingresos_netos[i],
             ingresosNominal: modelResult.arr_ingresos_brutos_nominal[i],
             ingresosReal: modelResult.arr_ingresos_brutos_real[i],
@@ -1156,7 +1159,7 @@ export default function SimuladorVida() {
                                                 </Bar>
                                                 <Line yAxisId="left" type="monotone" dataKey="gastosFamiliaNominal" name="Gastos familia (nominal)" stroke="#555555" strokeWidth={2} dot={false} />
                                                 <Line yAxisId="left" type="monotone" dataKey="gastosViviendaNominal" name="Gastos vivienda (nominal)" stroke="#888888" strokeWidth={2} dot={false} />
-                                                <Line yAxisId="left" type="monotone" dataKey="ingresosNetos" name="Ingresos netos" stroke="#bbbbbb" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="ingresosNominal" name="Ingresos brutos (nominal)" stroke="#bbbbbb" strokeWidth={2} dot={false} />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -1327,7 +1330,7 @@ export default function SimuladorVida() {
                                                 </Bar>
                                                 <Line yAxisId="left" type="monotone" dataKey="gastosFamiliaNominal" name="Gastos familia (nominal)" stroke="#555555" strokeWidth={2} dot={false} />
                                                 <Line yAxisId="left" type="monotone" dataKey="gastosViviendaNominal" name="Gastos vivienda (nominal)" stroke="#888888" strokeWidth={2} dot={false} />
-                                                <Line yAxisId="left" type="monotone" dataKey="ingresosNetos" name="Ingresos netos" stroke="#bbbbbb" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="ingresosNominal" name="Ingresos brutos (nominal)" stroke="#bbbbbb" strokeWidth={2} dot={false} />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>
