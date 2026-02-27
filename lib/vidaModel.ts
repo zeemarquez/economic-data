@@ -262,6 +262,8 @@ export function runModeloVida(inputs: InputsModeloVida) {
         }
     }
 
+    const arr_patrimonio_nominal = makeArr(t => arr_fondos_eop[t] + arr_patrimonio_inmobiliario[t]);
+
     let is_possible = true;
     for (let t = 0; t < periods; t++) {
         if (!arr_fondos_disponibles[t]) {
@@ -333,6 +335,7 @@ export function runModeloVida(inputs: InputsModeloVida) {
         { group: 'Patrimonio', name: 'Interes', values: arr_interes },
         { group: 'Patrimonio', name: 'Fondos EoP', values: arr_fondos_eop },
         { group: 'Patrimonio', name: 'Fondos real', values: arr_fondos_real, highlight: true },
+        { group: 'Patrimonio', name: 'Patrimonio nominal', values: arr_patrimonio_nominal },
         { group: 'Patrimonio', name: 'Patrimonio real', values: arr_patrimonio_real, highlight: true },
     ];
 

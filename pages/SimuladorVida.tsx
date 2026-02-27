@@ -150,6 +150,7 @@ const CONCEPT_TOOLTIPS: Record<string, string> = {
     'Interes': 'Rendimiento económico generado por los fondos en el periodo.',
     'Fondos EoP': 'Valor de la cartera de inversión al finalizar el año.',
     'Fondos real': 'Valor de las inversiones expresado en poder adquisitivo actual.',
+    'Patrimonio nominal': 'Fondos EoP + Patrimonio inmobiliario (valor contable, sin revalorización).',
     'Patrimonio real': 'Suma de inversiones, valor neto de vivienda y efectivo (ajustado).',
 };
 
