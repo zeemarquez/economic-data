@@ -145,19 +145,22 @@ export function runModeloVida(inputs: InputsModeloVida) {
     const arr_padres = makeArr(() => 2);
     const arr_hijos = makeArr(t => inputs.nacimiento_hijos.filter(nacimiento => nacimiento < getPeriod(t)).length);
 
-    const coste_por_hijo = inputs.coste_educacion_mensual * 12 / 1000;
-    const arr_educacion_por_hijo = makeArr(() => -coste_por_hijo);
-
-    const arr_hijos_colegio = makeArr(t => {
+    // Hijos en hogar = menores de 23 años (edad >= 0 y edad < 23)
+    const arr_hijos_en_hogar = makeArr(t => {
         return inputs.nacimiento_hijos.filter(nacimiento => {
-            const edad = Math.max(0, getPeriod(t) - nacimiento);
-            return edad >= 1 && edad <= 23;
+            const edad = getPeriod(t) - nacimiento;
+            return edad >= 0 && edad < 23;
         }).length;
     });
 
+    const arr_miembros_hogar = makeArr(t => arr_padres[t] + arr_hijos_en_hogar[t]);
+
+    const coste_por_hijo = inputs.coste_educacion_mensual * 12 / 1000;
+    const arr_educacion_por_hijo = makeArr(() => -coste_por_hijo);
+
     const arr_educacion_descuento = makeArr(t => {
         if (!descuentos_educacion) return 0;
-        const hijos_col = arr_hijos_colegio[t];
+        const hijos_col = arr_hijos_en_hogar[t];
         if (hijos_col === 0) return 0;
         if (hijos_col === 2) return 0.15 * coste_por_hijo;
         if (hijos_col === 3) return 0.15 * coste_por_hijo + 0.50 * coste_por_hijo;
@@ -165,11 +168,11 @@ export function runModeloVida(inputs: InputsModeloVida) {
         return 0;
     });
 
-    const arr_educacion = makeArr(t => arr_educacion_por_hijo[t] * arr_hijos_colegio[t] + arr_educacion_descuento[t]);
-    const arr_alimentacion = makeArr(t => -1 * (arr_padres[t] + arr_hijos[t]) * (inputs.alimentacion_mensual * 12 / 1000) * arr_independizado[t]);
-    const arr_ocio = makeArr(t => -1 * (arr_padres[t] + arr_hijos[t]) * (inputs.ocio_mensual * 12 / 1000));
-    const arr_vestimenta = makeArr(t => -1 * (arr_padres[t] + arr_hijos[t]) * (inputs.vestimenta_mensual * 12 / 1000));
-    const arr_otros_gastos_hijos = makeArr(() => -1 * inputs.otros_gastos_mensuales * 12 / 1000);
+    const arr_educacion = makeArr(t => arr_educacion_por_hijo[t] * arr_hijos_en_hogar[t] + arr_educacion_descuento[t]);
+    const arr_alimentacion = makeArr(t => -1 * arr_miembros_hogar[t] * (inputs.alimentacion_mensual * 12 / 1000) * arr_independizado[t]);
+    const arr_ocio = makeArr(t => -1 * arr_miembros_hogar[t] * (inputs.ocio_mensual * 12 / 1000));
+    const arr_vestimenta = makeArr(t => -1 * arr_miembros_hogar[t] * (inputs.vestimenta_mensual * 12 / 1000));
+    const arr_otros_gastos_hijos = makeArr(t => -1 * arr_hijos_en_hogar[t] * (inputs.otros_gastos_mensuales * 12 / 1000));
 
     const arr_total_familia = makeArr(t => arr_educacion[t] + arr_alimentacion[t] + arr_ocio[t] + arr_vestimenta[t] + arr_otros_gastos_hijos[t]);
     const arr_total_familia_inf = makeArr(t => arr_total_familia[t] * (1 + inflaccion_acumulada[t]));
@@ -300,8 +303,9 @@ export function runModeloVida(inputs: InputsModeloVida) {
         { group: 'Familia', name: 'Independizado', values: arr_independizado, format: 'boolean' },
         { group: 'Familia', name: 'Padres', values: arr_padres },
         { group: 'Familia', name: 'Hijos', values: arr_hijos },
+        { group: 'Familia', name: 'Hijos en hogar', values: arr_hijos_en_hogar },
+        { group: 'Familia', name: 'Miembros hogar', values: arr_miembros_hogar },
         { group: 'Familia', name: 'Educación por hijo', values: arr_educacion_por_hijo },
-        { group: 'Familia', name: 'Hijos colegio', values: arr_hijos_colegio },
         { group: 'Familia', name: 'Educación descuento', values: arr_educacion_descuento },
         { group: 'Familia', name: 'Educación', values: arr_educacion },
         { group: 'Familia', name: 'Alimentación', values: arr_alimentacion },

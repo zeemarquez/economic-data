@@ -26,26 +26,26 @@ const defaultInputs: InputsModeloVida = {
     vestimenta_mensual: 50,
     otros_gastos_mensuales: 200,
 
-    alquiler_mensual: 1800, // 5% de precio_vivienda por defecto para que coincida con modo simple
-    precio_vivienda: 400,
+    alquiler_mensual: 1600, // 5% de precio_vivienda por defecto para que coincida con modo simple
+    precio_vivienda: 300,
     tin_hipoteca: 0.029,
     years_hipoteca: 30,
 
     year_indepen: 2028,
     year_compra_vivienda: 2032,
-    ingresos_trabajo_brutos_y0: 45,
-    ingresos_trabajo_brutos_y15: 80,
+    ingresos_trabajo_brutos_y0: 50,
+    ingresos_trabajo_brutos_y15: 90,
 
     capital_inicial: 30,
     tasa_impositiva_salario: 0.31,
     year_jubilacion: 2065,
-    crecimiento_salario: 0.03,
+    crecimiento_salario: 0,
     porcentaje_gastos_fijos_vivienda: 0.02,
     porcentaje_entrada_vivienda: 0.20,
     inflaccion: 0.03,
     tir_inmobiliaria: 0.02,
     tir_ahorros: 0.09,
-    ayuda_entrada: 10,
+    ayuda_entrada: 20,
     liquido_minimo: 5,
     descuentos_educacion: false
 };
@@ -116,13 +116,14 @@ const CONCEPT_TOOLTIPS: Record<string, string> = {
     'Padres': 'Número de adultos que componen la unidad familiar.',
     'Hijos': 'Número total de hijos nacidos hasta la fecha.',
     'Educación por hijo': 'Coste anual de educación/colegio por cada hijo individualmente.',
-    'Hijos colegio': 'Número de hijos en edad de escolarización (entre 1 y 23 años).',
+    'Hijos en hogar': 'Número de hijos menores de 23 años en el hogar.',
+    'Miembros hogar': 'Padres + Hijos en hogar. Se usa para prorratear gastos (alimentación, ocio, vestimenta, otros).',
     'Educación descuento': 'Ahorros aplicados por familia numerosa o subvenciones.',
     'Educación': 'Gasto total anual en enseñanza para todos los hijos.',
     'Alimentación': 'Inversión anual en comida para todos los miembros del hogar.',
     'Ocio': 'Gasto anual en entretenimiento y tiempo libre.',
     'Vestimenta': 'Gasto anual en ropa y calzado para la familia.',
-    'Otros gastos hijos': 'Gastos no previstos específicamente relacionados con los hijos.',
+    'Otros gastos hijos': 'Gastos no previstos por hijo en hogar (se multiplica solo por hijos en hogar).',
     'Total familia': 'Carga financiera total de la unidad familiar (valor nominal).',
     'Total familia real': 'Gasto familiar total ajustado por la inflación del periodo.',
     // P&G
@@ -240,16 +241,16 @@ const METOD_SECTIONS: MetodSection[] = [
         items: [
             {
                 label: 'Composición familiar',
-                desc: 'La unidad familiar siempre parte de 2 adultos (padres). Los hijos se acumulan a partir del año de nacimiento indicado. Los gastos de alimentación, ocio y vestimenta se multiplican por el total de miembros del hogar.',
+                desc: 'La unidad familiar siempre parte de 2 adultos (padres). Hijos en hogar = menores de 23 años. Miembros hogar = padres + hijos en hogar. Alimentación, ocio y vestimenta se multiplican por miembros hogar; otros gastos hijos solo por hijos en hogar.',
             },
             {
                 label: 'Educación',
-                desc: 'Se imputa un coste mensual por hijo escolarizado (entre 1 y 23 años). En modo Simple, el usuario elige colegio público (100 €/mes) o privado (700 €/mes). Con familia numerosa reconocida, se aplican descuentos automáticos.',
+                desc: 'Se imputa un coste mensual por hijo en hogar (menores de 23 años). En modo Simple, el usuario elige colegio público (100 €/mes) o privado (700 €/mes). Con familia numerosa reconocida, se aplican descuentos automáticos.',
                 formula: 'Educ(t) = Coste/hijo × HijosEnColegio(t) − Descuento(t)'
             },
             {
                 label: 'Descuentos familia numerosa',
-                desc: 'Con 2 hijos en colegio: −15 % en el coste de un hijo. Con 3: −15 % + −50 %. Con 4 o más: además el 4.º y sucesivos van gratuitos. Solo aplica si se activa la opción de descuentos.',
+                desc: 'Con 2 hijos en hogar: −15 % en el coste de un hijo. Con 3: −15 % + −50 %. Con 4 o más: además el 4.º y sucesivos van gratuitos. Solo aplica si se activa la opción de descuentos.',
             },
             {
                 label: 'Gasto familiar total ajustado',
@@ -882,7 +883,13 @@ export default function SimuladorVida() {
                     >
                         <div className="flex flex-col gap-6 mt-4 flex-1 overflow-y-auto pr-2 custom-scrollbar overflow-x-visible pt-8 pb-32">
                             <div className="space-y-4">
-                                <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Ingresos</h3>
+                                <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">
+                                    {modoSimple ? 'Ingresos' : (
+                                        <Tooltip text="Define la evolución de los ingresos brutos por años. Cada fila es un punto (año, importe en k€). Entre puntos se interpola linealmente; después del último año se mantiene constante hasta la jubilación.">
+                                            <span className="cursor-help">Ingresos</span>
+                                        </Tooltip>
+                                    )}
+                                </h3>
                                 {modoSimple ? (
                                     <div className="grid grid-cols-2 gap-3">
                                         <Input label="Ingresos Y0" suffix="k€" value={formatInput(inputs.ingresos_trabajo_brutos_y0)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y0')} tooltip="Ingresos totales brutos del hogar en el primer año (salarios nominales)." />
@@ -893,8 +900,12 @@ export default function SimuladorVida() {
                                     <div className="flex flex-col gap-2">
                                         {/* Header */}
                                         <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-1">
-                                            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Año</span>
-                                            <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500">Ingresos brutos (k€)</span>
+                                            <Tooltip text="Año de referencia para este punto de la curva. Entre dos años consecutivos el modelo interpola linealmente los ingresos.">
+                                                <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 cursor-help">Año</span>
+                                            </Tooltip>
+                                            <Tooltip text="Ingresos totales brutos del hogar en miles de euros (antes de impuestos), en valor nominal para ese año. Incluye todos los salarios del hogar.">
+                                                <span className="text-[10px] font-mono uppercase tracking-widest text-neutral-500 cursor-help">Ingresos brutos (k€)</span>
+                                            </Tooltip>
                                             <span className="w-5" />
                                         </div>
                                         {/* Existing rows */}
@@ -949,8 +960,8 @@ export default function SimuladorVida() {
                                         </p>
                                         {/* Tax rate, salary growth and retirement year in detailed mode */}
                                         <div className="grid grid-cols-3 gap-3 mt-1">
-                                            <Input label="Tasa" suffix="%" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} tooltip="Tasa impositiva media aplicada al salario bruto para calcular el neto." />
-                                            <Input label="Crec.Sal" suffix="%" value={formatInput((inputs.crecimiento_salario ?? 0.03) * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'crecimiento_salario')} tooltip="Tasa de crecimiento anual nominal del salario bruto. Por defecto igual a la inflación. Determina cómo aumentan los ingresos reales año a año." />
+                                            <Input type="number" step="0.1" label="Tasa" suffix="%" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} tooltip="Tasa impositiva media aplicada al salario bruto para calcular el neto." />
+                                            <Input type="number" step="0.1" label="Crec.Sal" suffix="%" value={formatInput((inputs.crecimiento_salario ?? 0) * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'crecimiento_salario')} tooltip="Tasa de crecimiento anual nominal del salario bruto. Por defecto igual a la inflación. Determina cómo aumentan los ingresos reales año a año." />
                                             <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a ser cero." />
                                         </div>
                                     </div>
@@ -967,9 +978,9 @@ export default function SimuladorVida() {
                                     {!modoSimple && (
                                         <>
                                             <Input label="Años Hipoteca" value={formatInput(inputs.years_hipoteca)} onChange={e => handleInputChange(e, 'years_hipoteca')} tooltip="Duración total del préstamo hipotecario en años." />
-                                            <Input label="TIN" suffix="%" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} tooltip="Tipo de Interés Nominal de la hipoteca." />
-                                            <Input label="Entrada" suffix="%" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} tooltip="Porcentaje del precio de la vivienda que se aporta como entrada inicial." />
-                                            <Input label="Gastos" suffix="%" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} tooltip="Gastos anuales fijos del inmueble (IBI, comunidad, mantenimiento) como % del precio." />
+                                            <Input type="number" step="0.1" label="TIN" suffix="%" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} tooltip="Tipo de Interés Nominal de la hipoteca." />
+                                            <Input type="number" step="0.1" label="Entrada" suffix="%" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} tooltip="Porcentaje del precio de la vivienda que se aporta como entrada inicial." />
+                                            <Input type="number" step="0.1" label="Gastos" suffix="%" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} tooltip="Gastos anuales fijos del inmueble (IBI, comunidad, mantenimiento) como % del precio." />
                                         </>
                                     )}
                                     <div className="col-span-2">
@@ -1079,9 +1090,9 @@ export default function SimuladorVida() {
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Patrimonio</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <Input label="Capital" suffix="k€" value={formatInput(inputs.capital_inicial!)} onChange={e => handleInputChange(e, 'capital_inicial')} tooltip="Capital o ahorros líquidos iniciales al comienzo de la simulación." />
-                                    <Input label="TIR" suffix="%" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} tooltip="Rentabilidad anual esperada de los ahorros e inversiones líquidas." />
-                                    <Input label="TIR Inmo." suffix="%" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} tooltip="Tasa de revalorización anual esperada del precio de la vivienda." />
-                                    <Input label="Inflacción" suffix="%" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} tooltip="Tasa de inflación anual prevista para el ajuste de precios y valores reales." />
+                                    <Input type="number" step="0.1" label="TIR" suffix="%" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} tooltip="Rentabilidad anual esperada de los ahorros e inversiones líquidas." />
+                                    <Input type="number" step="0.1" label="TIR Inmo." suffix="%" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} tooltip="Tasa de revalorización anual esperada del precio de la vivienda." />
+                                    <Input type="number" step="0.1" label="Inflacción" suffix="%" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} tooltip="Tasa de inflación anual prevista para el ajuste de precios y valores reales." />
                                 </div>
                             </div>
                         </div>

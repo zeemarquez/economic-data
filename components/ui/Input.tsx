@@ -38,7 +38,8 @@ export const Input: React.FC<InputProps> = ({ label, prefix, suffix, tooltip, cl
             text-xl font-mono text-white placeholder-neutral-700
             focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50
             transition-all duration-300 shadow-inner
-            ${className}
+            ${props.type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''}
+            ${className ?? ''}
           `}
         />
         {suffix && (
