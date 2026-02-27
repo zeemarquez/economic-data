@@ -124,7 +124,7 @@ export function runModeloVida(inputs: InputsModeloVida) {
 
     const arr_patrimonio_inmobiliario_real = makeArr(t => arr_patrimonio_inmobiliario[t] * (1 + vivienda_tir_accumulada[t]));
 
-    const arr_gastos_fijos = makeArr(t => -arr_hipoteca[t] * inputs.precio_vivienda * p_gastos_fijos_vivienda);
+    const arr_gastos_fijos = makeArr(t => getPeriod(t) >= inputs.year_compra_vivienda ? -inputs.precio_vivienda * p_gastos_fijos_vivienda : 0);
     const arr_gastos_fijos_inf = makeArr(t => arr_gastos_fijos[t] * (inflaccion_acumulada[t] + 1));
     const arr_alquiler = makeArr(t => (inputs.year_indepen <= getPeriod(t) && getPeriod(t) < inputs.year_compra_vivienda) ? -inputs.alquiler_mensual * 12 / 1000 : 0);
     const arr_alquiler_inf = makeArr(t => arr_alquiler[t] * (1 + inflaccion_acumulada[t]));
@@ -336,6 +336,9 @@ export function runModeloVida(inputs: InputsModeloVida) {
         arr_ingresos_brutos_nominal,
         arr_ingresos_brutos_real,
         arr_resultado_neto,
+        arr_ingresos_netos,
+        arr_total_familia_inf,
+        arr_gastos_vivienda,
         getPeriod,
         inflaccion_acumulada
     };

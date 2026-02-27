@@ -816,6 +816,9 @@ export default function SimuladorVida() {
             fondos: modelResult.arr_fondos_real[i],
             patrimonio: modelResult.arr_patrimonio_real[i],
             resultado: modelResult.arr_resultado_neto[i],
+            gastosFamiliaNominal: modelResult.arr_total_familia_inf[i],
+            gastosViviendaNominal: modelResult.arr_gastos_vivienda[i],
+            ingresosNetos: modelResult.arr_ingresos_netos[i],
             ingresosNominal: modelResult.arr_ingresos_brutos_nominal[i],
             ingresosReal: modelResult.arr_ingresos_brutos_real[i],
             fondosAlquiler: modelAlquiler.arr_fondos_real[i],
@@ -1137,7 +1140,7 @@ export default function SimuladorVida() {
                             {tab === 'charts' ? (
                                 <div className="h-full flex flex-col gap-8 overflow-y-auto pr-2 custom-scrollbar">
                                     <div className="h-[300px] w-full">
-                                        <h3 className="text-white font-mono text-sm mb-4">Patrimonio vs Fondos y Resultado</h3>
+                                        <h3 className="text-white font-mono text-sm mb-4">Gastos, Ingresos y Resultado</h3>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -1151,8 +1154,9 @@ export default function SimuladorVida() {
                                                         <Cell key={`cell-${index}`} fill={entry.resultado >= 0 ? '#4ade80' : '#f87171'} fillOpacity={0.3} />
                                                     ))}
                                                 </Bar>
-                                                <Line yAxisId="left" type="monotone" dataKey="fondos" name="Fondos (real)" stroke="#444444" strokeWidth={2} dot={false} />
-                                                <Line yAxisId="left" type="monotone" dataKey="patrimonio" name="Patrimonio (real)" stroke="#ffffff" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="gastosFamiliaNominal" name="Gastos familia (nominal)" stroke="#555555" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="gastosViviendaNominal" name="Gastos vivienda (nominal)" stroke="#888888" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="ingresosNetos" name="Ingresos netos" stroke="#bbbbbb" strokeWidth={2} dot={false} />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -1307,7 +1311,7 @@ export default function SimuladorVida() {
                             {tab === 'charts' ? (
                                 <div className="h-full flex flex-col gap-8 overflow-y-auto pr-2 custom-scrollbar">
                                     <div className="h-[45%] min-h-[280px] w-full">
-                                        <h3 className="text-white font-mono text-sm mb-4">Patrimonio vs Fondos y Resultado</h3>
+                                        <h3 className="text-white font-mono text-sm mb-4">Gastos, Ingresos y Resultado</h3>
                                         <ResponsiveContainer width="100%" height="100%">
                                             <ComposedChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
@@ -1321,8 +1325,9 @@ export default function SimuladorVida() {
                                                         <Cell key={`cell-${index}`} fill={entry.resultado >= 0 ? '#4ade80' : '#f87171'} fillOpacity={0.3} />
                                                     ))}
                                                 </Bar>
-                                                <Line yAxisId="left" type="monotone" dataKey="fondos" name="Fondos (real)" stroke="#444444" strokeWidth={2} dot={false} />
-                                                <Line yAxisId="left" type="monotone" dataKey="patrimonio" name="Patrimonio (real)" stroke="#ffffff" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="gastosFamiliaNominal" name="Gastos familia (nominal)" stroke="#555555" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="gastosViviendaNominal" name="Gastos vivienda (nominal)" stroke="#888888" strokeWidth={2} dot={false} />
+                                                <Line yAxisId="left" type="monotone" dataKey="ingresosNetos" name="Ingresos netos" stroke="#bbbbbb" strokeWidth={2} dot={false} />
                                             </ComposedChart>
                                         </ResponsiveContainer>
                                     </div>
