@@ -1,0 +1,612 @@
+{
+  "meta": {
+    "generatedAt": "2026-05-12T08:39:36.293Z",
+    "sources": [
+      "FRED CPIAUCSL (CPI all urban consumers, annual average of monthly index)",
+      "FRED MSPUS (median sales price of houses sold, USD; nominal)",
+      "FRED MEFAINUSA646N (median family income, nominal USD, annual)",
+      "datasets/s-and-p-500 (GitHub, Robert Shiller): S&P 500 monthly, December close per year",
+      "datasets/gold-prices (GitHub): monthly USD/oz, annual average"
+    ],
+    "notes": [
+      "House series uses median transaction price in nominal USD; \"real\" column is CPI-deflated to 2024 dollars (purchasing-power standardized).",
+      "Income is median family income (CPS), not household, for a continuous annual series from the 1950s."
+    ]
+  },
+  "records": [
+    {
+      "year": 1960,
+      "cpi": 29.585000000000004,
+      "medianHouseNominalUsd": null,
+      "medianHouseReal2024Usd": null,
+      "medianIncomeNominalUsd": 5620,
+      "sp500": 56.8,
+      "goldUsdPerOz": 35.269999999999996
+    },
+    {
+      "year": 1961,
+      "cpi": 29.90166666666667,
+      "medianHouseNominalUsd": null,
+      "medianHouseReal2024Usd": null,
+      "medianIncomeNominalUsd": 5735,
+      "sp500": 71.74,
+      "goldUsdPerOz": 35.25
+    },
+    {
+      "year": 1962,
+      "cpi": 30.253333333333334,
+      "medianHouseNominalUsd": null,
+      "medianHouseReal2024Usd": null,
+      "medianIncomeNominalUsd": 5956,
+      "sp500": 62.64,
+      "goldUsdPerOz": 35.230000000000004
+    },
+    {
+      "year": 1963,
+      "cpi": 30.633333333333336,
+      "medianHouseNominalUsd": 18050,
+      "medianHouseReal2024Usd": 184839.5617519042,
+      "medianIncomeNominalUsd": 6249,
+      "sp500": 74.17,
+      "goldUsdPerOz": 35.09000000000001
+    },
+    {
+      "year": 1964,
+      "cpi": 31.03833333333333,
+      "medianHouseNominalUsd": 18925,
+      "medianHouseReal2024Usd": 191271.15300971916,
+      "medianIncomeNominalUsd": 6569,
+      "sp500": 83.96,
+      "goldUsdPerOz": 35.10000000000001
+    },
+    {
+      "year": 1965,
+      "cpi": 31.528333333333332,
+      "medianHouseNominalUsd": 20125,
+      "medianHouseReal2024Usd": 200238.16474599563,
+      "medianIncomeNominalUsd": 6957,
+      "sp500": 91.73,
+      "goldUsdPerOz": 35.12
+    },
+    {
+      "year": 1966,
+      "cpi": 32.47083333333333,
+      "medianHouseNominalUsd": 21500,
+      "medianHouseReal2024Usd": 207709.80880277167,
+      "medianIncomeNominalUsd": 7532,
+      "sp500": 81.33,
+      "goldUsdPerOz": 35.13
+    },
+    {
+      "year": 1967,
+      "cpi": 33.37499999999999,
+      "medianHouseNominalUsd": 22750,
+      "medianHouseReal2024Usd": 213831.709113608,
+      "medianIncomeNominalUsd": 7933,
+      "sp500": 95.3,
+      "goldUsdPerOz": 34.949999999999996
+    },
+    {
+      "year": 1968,
+      "cpi": 34.79166666666667,
+      "medianHouseNominalUsd": 24800,
+      "medianHouseReal2024Usd": 223608.5614371257,
+      "medianIncomeNominalUsd": 8632,
+      "sp500": 106.5,
+      "goldUsdPerOz": 38.925
+    },
+    {
+      "year": 1969,
+      "cpi": 36.68333333333333,
+      "medianHouseNominalUsd": 25600,
+      "medianHouseReal2024Usd": 218918.84779645616,
+      "medianIncomeNominalUsd": 9433,
+      "sp500": 91.11,
+      "goldUsdPerOz": 41.083333333333336
+    },
+    {
+      "year": 1970,
+      "cpi": 38.84166666666666,
+      "medianHouseNominalUsd": 23475,
+      "medianHouseReal2024Usd": 189591.8763140957,
+      "medianIncomeNominalUsd": 9867,
+      "sp500": 90.05,
+      "goldUsdPerOz": 35.94166666666667
+    },
+    {
+      "year": 1971,
+      "cpi": 40.483333333333334,
+      "medianHouseNominalUsd": 25225,
+      "medianHouseReal2024Usd": 195464.04909427743,
+      "medianIncomeNominalUsd": 10290,
+      "sp500": 99.17,
+      "goldUsdPerOz": 40.80416666666667
+    },
+    {
+      "year": 1972,
+      "cpi": 41.80833333333333,
+      "medianHouseNominalUsd": 27525,
+      "medianHouseReal2024Usd": 206526.81771975284,
+      "medianIncomeNominalUsd": 11120,
+      "sp500": 117.5,
+      "goldUsdPerOz": 58.15916666666666
+    },
+    {
+      "year": 1973,
+      "cpi": 44.425000000000004,
+      "medianHouseNominalUsd": 32600,
+      "medianHouseReal2024Usd": 230198.31701369345,
+      "medianIncomeNominalUsd": 12050,
+      "sp500": 94.78,
+      "goldUsdPerOz": 97.32583333333334
+    },
+    {
+      "year": 1974,
+      "cpi": 49.31666666666666,
+      "medianHouseNominalUsd": 36050,
+      "medianHouseReal2024Usd": 229310.2854004731,
+      "medianIncomeNominalUsd": 12900,
+      "sp500": 67.07,
+      "goldUsdPerOz": 159.24499999999998
+    },
+    {
+      "year": 1975,
+      "cpi": 53.824999999999996,
+      "medianHouseNominalUsd": 39275,
+      "medianHouseReal2024Usd": 228899.12672240284,
+      "medianIncomeNominalUsd": 13720,
+      "sp500": 88.7,
+      "goldUsdPerOz": 161.02916666666667
+    },
+    {
+      "year": 1976,
+      "cpi": 56.93333333333334,
+      "medianHouseNominalUsd": 44225,
+      "medianHouseReal2024Usd": 243676.25446428568,
+      "medianIncomeNominalUsd": 14960,
+      "sp500": 104.7,
+      "goldUsdPerOz": 124.81583333333334
+    },
+    {
+      "year": 1977,
+      "cpi": 60.61666666666667,
+      "medianHouseNominalUsd": 48900,
+      "medianHouseReal2024Usd": 253063.07973604614,
+      "medianIncomeNominalUsd": 16010,
+      "sp500": 93.82,
+      "goldUsdPerOz": 147.72083333333333
+    },
+    {
+      "year": 1978,
+      "cpi": 65.24166666666666,
+      "medianHouseNominalUsd": 55850,
+      "medianHouseReal2024Usd": 268540.6965129646,
+      "medianIncomeNominalUsd": 17640,
+      "sp500": 96.11,
+      "goldUsdPerOz": 193.23916666666665
+    },
+    {
+      "year": 1979,
+      "cpi": 72.58333333333333,
+      "medianHouseNominalUsd": 62750,
+      "medianHouseReal2024Usd": 271199.4483352468,
+      "medianIncomeNominalUsd": 19590,
+      "sp500": 107.8,
+      "goldUsdPerOz": 306.66749999999996
+    },
+    {
+      "year": 1980,
+      "cpi": 82.38333333333334,
+      "medianHouseNominalUsd": 64750,
+      "medianHouseReal2024Usd": 246554.19330366168,
+      "medianIncomeNominalUsd": 21020,
+      "sp500": 133.5,
+      "goldUsdPerOz": 607.8641666666666
+    },
+    {
+      "year": 1981,
+      "cpi": 90.93333333333332,
+      "medianHouseNominalUsd": 68950,
+      "medianHouseReal2024Usd": 237860.94492302052,
+      "medianIncomeNominalUsd": 22390,
+      "sp500": 123.8,
+      "goldUsdPerOz": 459.75416666666666
+    },
+    {
+      "year": 1982,
+      "cpi": 96.53333333333336,
+      "medianHouseNominalUsd": 69225,
+      "medianHouseReal2024Usd": 224956.03163846675,
+      "medianIncomeNominalUsd": 23430,
+      "sp500": 139.4,
+      "goldUsdPerOz": 375.7966666666667
+    },
+    {
+      "year": 1983,
+      "cpi": 99.58333333333333,
+      "medianHouseNominalUsd": 75375,
+      "medianHouseReal2024Usd": 237439.32364016736,
+      "medianIncomeNominalUsd": 24580,
+      "sp500": 164.4,
+      "goldUsdPerOz": 422.53000000000003
+    },
+    {
+      "year": 1984,
+      "cpi": 103.93333333333334,
+      "medianHouseNominalUsd": 79950,
+      "medianHouseReal2024Usd": 241310.1516196279,
+      "medianIncomeNominalUsd": 26430,
+      "sp500": 164.5,
+      "goldUsdPerOz": 360.47749999999996
+    },
+    {
+      "year": 1985,
+      "cpi": 107.60000000000001,
+      "medianHouseNominalUsd": 84275,
+      "medianHouseReal2024Usd": 245696.21743339524,
+      "medianIncomeNominalUsd": 27740,
+      "sp500": 207.3,
+      "goldUsdPerOz": 317.90749999999997
+    },
+    {
+      "year": 1986,
+      "cpi": 109.69166666666668,
+      "medianHouseNominalUsd": 92025,
+      "medianHouseReal2024Usd": 263174.72115019365,
+      "medianIncomeNominalUsd": 29460,
+      "sp500": 248.6,
+      "goldUsdPerOz": 367.6941666666666
+    },
+    {
+      "year": 1987,
+      "cpi": 113.61666666666666,
+      "medianHouseNominalUsd": 104700,
+      "medianHouseReal2024Usd": 289079.04987531167,
+      "medianIncomeNominalUsd": 30970,
+      "sp500": 241,
+      "goldUsdPerOz": 446.4725
+    },
+    {
+      "year": 1988,
+      "cpi": 118.27500000000002,
+      "medianHouseNominalUsd": 112225,
+      "medianHouseReal2024Usd": 297651.8854717113,
+      "medianIncomeNominalUsd": 32190,
+      "sp500": 276.5,
+      "goldUsdPerOz": 437.04833333333335
+    },
+    {
+      "year": 1989,
+      "cpi": 123.94166666666668,
+      "medianHouseNominalUsd": 120425,
+      "medianHouseReal2024Usd": 304797.43202447385,
+      "medianIncomeNominalUsd": 34210,
+      "sp500": 348.6,
+      "goldUsdPerOz": 381.4316666666667
+    },
+    {
+      "year": 1990,
+      "cpi": 130.65833333333333,
+      "medianHouseNominalUsd": 122300,
+      "medianHouseReal2024Usd": 293630.60743669875,
+      "medianIncomeNominalUsd": 35350,
+      "sp500": 328.75,
+      "goldUsdPerOz": 383.46666666666664
+    },
+    {
+      "year": 1991,
+      "cpi": 136.16666666666666,
+      "medianHouseNominalUsd": 119975,
+      "medianHouseReal2024Usd": 276396.11416768667,
+      "medianIncomeNominalUsd": 35940,
+      "sp500": 388.51,
+      "goldUsdPerOz": 362.18250000000006
+    },
+    {
+      "year": 1992,
+      "cpi": 140.3083333333333,
+      "medianHouseNominalUsd": 121375,
+      "medianHouseReal2024Usd": 271367.4524855972,
+      "medianIncomeNominalUsd": 36570,
+      "sp500": 435.64,
+      "goldUsdPerOz": 343.73333333333335
+    },
+    {
+      "year": 1993,
+      "cpi": 144.475,
+      "medianHouseNominalUsd": 126500,
+      "medianHouseReal2024Usd": 274669.09903674223,
+      "medianIncomeNominalUsd": 36960,
+      "sp500": 465.95,
+      "goldUsdPerOz": 359.77
+    },
+    {
+      "year": 1994,
+      "cpi": 148.225,
+      "medianHouseNominalUsd": 130425,
+      "medianHouseReal2024Usd": 276026.8739247765,
+      "medianIncomeNominalUsd": 38780,
+      "sp500": 455.19,
+      "goldUsdPerOz": 384.0116666666667
+    },
+    {
+      "year": 1995,
+      "cpi": 152.38333333333335,
+      "medianHouseNominalUsd": 133475,
+      "medianHouseReal2024Usd": 274773.2437657224,
+      "medianIncomeNominalUsd": 40610,
+      "sp500": 614.57,
+      "goldUsdPerOz": 384.16416666666663
+    },
+    {
+      "year": 1996,
+      "cpi": 156.85833333333332,
+      "medianHouseNominalUsd": 140250,
+      "medianHouseReal2024Usd": 280483.45880040375,
+      "medianIncomeNominalUsd": 42300,
+      "sp500": 743.25,
+      "goldUsdPerOz": 387.6958333333334
+    },
+    {
+      "year": 1997,
+      "cpi": 160.525,
+      "medianHouseNominalUsd": 145000,
+      "medianHouseReal2024Usd": 283359.1911955562,
+      "medianIncomeNominalUsd": 44570,
+      "sp500": 962.37,
+      "goldUsdPerOz": 331.0958333333333
+    },
+    {
+      "year": 1998,
+      "cpi": 163.00833333333335,
+      "medianHouseNominalUsd": 151925,
+      "medianHouseReal2024Usd": 292369.06479730067,
+      "medianIncomeNominalUsd": 46740,
+      "sp500": 1190.05,
+      "goldUsdPerOz": 294.1608333333333
+    },
+    {
+      "year": 1999,
+      "cpi": 166.58333333333331,
+      "medianHouseNominalUsd": 160125,
+      "medianHouseReal2024Usd": 301536.2817658829,
+      "medianIncomeNominalUsd": 48830,
+      "sp500": 1428.68,
+      "goldUsdPerOz": 278.7683333333334
+    },
+    {
+      "year": 2000,
+      "cpi": 172.1916666666667,
+      "medianHouseNominalUsd": 167550,
+      "medianHouseReal2024Usd": 305241.9948216618,
+      "medianIncomeNominalUsd": 50730,
+      "sp500": 1330.93,
+      "goldUsdPerOz": 279.0316666666666
+    },
+    {
+      "year": 2001,
+      "cpi": 177.04166666666666,
+      "medianHouseNominalUsd": 173100,
+      "medianHouseReal2024Usd": 306713.9711932219,
+      "medianIncomeNominalUsd": 51410,
+      "sp500": 1144.93,
+      "goldUsdPerOz": 270.9891666666667
+    },
+    {
+      "year": 2002,
+      "cpi": 179.86666666666667,
+      "medianHouseNominalUsd": 186025,
+      "medianHouseReal2024Usd": 324438.66635007405,
+      "medianIncomeNominalUsd": 51680,
+      "sp500": 899.18,
+      "goldUsdPerOz": 309.9716666666667
+    },
+    {
+      "year": 2003,
+      "cpi": 184,
+      "medianHouseNominalUsd": 192125,
+      "medianHouseReal2024Usd": 327550.3275588768,
+      "medianIncomeNominalUsd": 52680,
+      "sp500": 1080.64,
+      "goldUsdPerOz": 363.5091666666667
+    },
+    {
+      "year": 2004,
+      "cpi": 188.9083333333333,
+      "medianHouseNominalUsd": 218150,
+      "medianHouseReal2024Usd": 362256.4121487494,
+      "medianIncomeNominalUsd": 54060,
+      "sp500": 1199.21,
+      "goldUsdPerOz": 409.21158333333324
+    },
+    {
+      "year": 2005,
+      "cpi": 195.26666666666665,
+      "medianHouseNominalUsd": 236550,
+      "medianHouseReal2024Usd": 380020.32088596787,
+      "medianIncomeNominalUsd": 56190,
+      "sp500": 1262.07,
+      "goldUsdPerOz": 444.8425833333333
+    },
+    {
+      "year": 2006,
+      "cpi": 201.55833333333337,
+      "medianHouseNominalUsd": 243750,
+      "medianHouseReal2024Usd": 379363.7646256252,
+      "medianIncomeNominalUsd": 58410,
+      "sp500": 1416.42,
+      "goldUsdPerOz": 604.3358333333332
+    },
+    {
+      "year": 2007,
+      "cpi": 207.34416666666667,
+      "medianHouseNominalUsd": 244950,
+      "medianHouseReal2024Usd": 370593.3335878752,
+      "medianIncomeNominalUsd": 61360,
+      "sp500": 1479.22,
+      "goldUsdPerOz": 696.72025
+    },
+    {
+      "year": 2008,
+      "cpi": 215.25424999999998,
+      "medianHouseNominalUsd": 229550,
+      "medianHouseReal2024Usd": 334531.90428682975,
+      "medianIncomeNominalUsd": 61520,
+      "sp500": 877.56,
+      "goldUsdPerOz": 871.7072499999999
+    },
+    {
+      "year": 2009,
+      "cpi": 214.56466666666668,
+      "medianHouseNominalUsd": 215650,
+      "medianHouseReal2024Usd": 315284.94738959806,
+      "medianIncomeNominalUsd": 60090,
+      "sp500": 1110.38,
+      "goldUsdPerOz": 972.9659166666667
+    },
+    {
+      "year": 2010,
+      "cpi": 218.07616666666672,
+      "medianHouseNominalUsd": 222700,
+      "medianHouseReal2024Usd": 320349.4576436213,
+      "medianIncomeNominalUsd": 60240,
+      "sp500": 1241.53,
+      "goldUsdPerOz": 1224.66425
+    },
+    {
+      "year": 2011,
+      "cpi": 224.923,
+      "medianHouseNominalUsd": 224900,
+      "medianHouseReal2024Usd": 313666.0887651922,
+      "medianIncomeNominalUsd": 60970,
+      "sp500": 1243.32,
+      "goldUsdPerOz": 1569.2108333333335
+    },
+    {
+      "year": 2012,
+      "cpi": 229.58608333333328,
+      "medianHouseNominalUsd": 244400,
+      "medianHouseReal2024Usd": 333939.3695828689,
+      "medianIncomeNominalUsd": 62240,
+      "sp500": 1422.29,
+      "goldUsdPerOz": 1669.5176666666664
+    },
+    {
+      "year": 2013,
+      "cpi": 232.95174999999998,
+      "medianHouseNominalUsd": 266225,
+      "medianHouseReal2024Usd": 358504.6878627584,
+      "medianIncomeNominalUsd": 65470,
+      "sp500": 1807.78,
+      "goldUsdPerOz": 1411.4623333333332
+    },
+    {
+      "year": 2014,
+      "cpi": 236.715,
+      "medianHouseNominalUsd": 285775,
+      "medianHouseReal2024Usd": 378713.1934147251,
+      "medianIncomeNominalUsd": 66630,
+      "sp500": 2054.27,
+      "goldUsdPerOz": 1265.5774999999996
+    },
+    {
+      "year": 2015,
+      "cpi": 237.00175,
+      "medianHouseNominalUsd": 294150,
+      "medianHouseReal2024Usd": 389340.2294497825,
+      "medianIncomeNominalUsd": 70700,
+      "sp500": 2054.08,
+      "goldUsdPerOz": 1160.6633333333334
+    },
+    {
+      "year": 2016,
+      "cpi": 240.00541666666666,
+      "medianHouseNominalUsd": 305125,
+      "medianHouseReal2024Usd": 398812.4702914691,
+      "medianIncomeNominalUsd": 72710,
+      "sp500": 2246.63,
+      "goldUsdPerOz": 1248.9883333333335
+    },
+    {
+      "year": 2017,
+      "cpi": 245.121,
+      "medianHouseNominalUsd": 322425,
+      "medianHouseReal2024Usd": 412629.40093872,
+      "medianIncomeNominalUsd": 76140,
+      "sp500": 2664.34,
+      "goldUsdPerOz": 1257.5591666666667
+    },
+    {
+      "year": 2018,
+      "cpi": 251.09949999999995,
+      "medianHouseNominalUsd": 325275,
+      "medianHouseReal2024Usd": 406365.4892283736,
+      "medianIncomeNominalUsd": 78650,
+      "sp500": 2567.31,
+      "goldUsdPerOz": 1269.2266666666665
+    },
+    {
+      "year": 2019,
+      "cpi": 255.65258333333335,
+      "medianHouseNominalUsd": 320250,
+      "medianHouseReal2024Usd": 392962.3419608185,
+      "medianIncomeNominalUsd": 86010,
+      "sp500": 3176.7495238095235,
+      "goldUsdPerOz": 1392.4983333333332
+    },
+    {
+      "year": 2020,
+      "cpi": 258.85574999999994,
+      "medianHouseNominalUsd": 328150,
+      "medianHouseReal2024Usd": 397673.42773597525,
+      "medianIncomeNominalUsd": 84350,
+      "sp500": 3695.3099999999995,
+      "goldUsdPerOz": 1770.2541666666664
+    },
+    {
+      "year": 2021,
+      "cpi": 270.9734166666667,
+      "medianHouseNominalUsd": 383000,
+      "medianHouseReal2024Usd": 443388.1349369755,
+      "medianIncomeNominalUsd": 88590,
+      "sp500": 4674.772727272726,
+      "goldUsdPerOz": 1799.6291666666666
+    },
+    {
+      "year": 2022,
+      "cpi": 292.62641666666667,
+      "medianHouseNominalUsd": 432950,
+      "medianHouseReal2024Usd": 464126.3177994012,
+      "medianIncomeNominalUsd": 92750,
+      "sp500": 3912.380952380953,
+      "goldUsdPerOz": 1800.6024999999997
+    },
+    {
+      "year": 2023,
+      "cpi": 304.703,
+      "medianHouseNominalUsd": 426525,
+      "medianHouseReal2024Usd": 439116.48568442056,
+      "medianIncomeNominalUsd": 100800,
+      "sp500": 4685.05,
+      "goldUsdPerOz": 1942.6658333333335
+    },
+    {
+      "year": 2024,
+      "cpi": 313.6981666666666,
+      "medianHouseNominalUsd": 418975,
+      "medianHouseReal2024Usd": 418975,
+      "medianIncomeNominalUsd": 105800,
+      "sp500": 6010.91,
+      "goldUsdPerOz": 2387.7025
+    },
+    {
+      "year": 2025,
+      "cpi": 321.96190909090905,
+      "medianHouseNominalUsd": 415400,
+      "medianHouseReal2024Usd": 404737.9977379218,
+      "medianIncomeNominalUsd": null,
+      "sp500": 6853.03,
+      "goldUsdPerOz": 3441.505833333334
+    }
+  ]
+}

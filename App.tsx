@@ -6,6 +6,7 @@ import Interes from './pages/Interes';
 import GastoEspana from './pages/GastoEspana';
 import EnergiaEspana from './pages/EnergiaEspana';
 import SimuladorVida from './pages/SimuladorVida';
+import Inflation from './pages/Inflation';
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/gasto-espana" element={<GastoEspana />} />
         <Route path="/energia-espana" element={<EnergiaEspana />} />
         <Route path="/simulador-vida" element={<SimuladorVida />} />
+        <Route path="/inflation" element={<Inflation />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
-import { Calculator, Percent, PieChart, Zap, ChevronDown } from 'lucide-react';
+import { Calculator, Percent, PieChart, Zap, ChevronDown, LineChart } from 'lucide-react';
 
 const PAGES = [
+  {
+    path: '/inflation',
+    title: 'Inflation',
+    description:
+      'Vivienda, ingreso familiar mediano, S&P 500 y oro (1960–hoy): dólares u onzas de oro, índice o niveles absolutos.',
+    icon: <LineChart size={20} />,
+  },
   {
     path: '/nomina',
     title: 'Calculadora Nómina',
