@@ -103,12 +103,11 @@ function popupHtml(props: MuniProps, metric: MetricId): string {
   const plot = typeof props.plot === 'number' ? props.plot : -1;
   const yieldPct =
     venta != null && rent != null && venta > 0 && rent > 0 ? (rent * 12 * 100) / venta : null;
-  return `<div style="font-family:ui-monospace,monospace;font-size:12px;color:#e5e5e5;line-height:1.5;min-width:200px">
+  return `<div style="font-family:ui-monospace,monospace;font-size:12px;color:#e5e5e5;line-height:1.5;min-width:200px;box-sizing:border-box">
     <div style="font-weight:700;margin-bottom:6px;color:#fafafa">${name}</div>
-    <div>Venta: ${venta != null ? `${venta.toFixed(0)} €/m²` : '—'}</div>
+    <div>Precio: ${venta != null ? `${venta.toFixed(0)} €/m²` : '—'}</div>
     <div>Alquiler: ${rent != null ? `${rent.toFixed(2)} €/m² mes` : '—'}</div>
-    <div>Renta bruta: ${yieldPct != null ? `${yieldPct.toFixed(2)} %` : '—'}</div>
-    <div style="margin-top:6px;color:#a3a3a3">Mostrado: ${formatPlot(metric, plot)}</div>
+    <div>Alquiler/Precio: ${yieldPct != null ? `${yieldPct.toFixed(2)} %` : '—'}</div>
   </div>`;
 }
 
@@ -246,7 +245,6 @@ export default function ViviendaMadrid() {
       },
       onEachFeature: (feature, lyr) => {
         const props = (feature.properties ?? {}) as MuniProps;
-        let closePopupTimer: ReturnType<typeof setTimeout> | null = null;
 
         const resetStyle = () => {
           const plot = props.plot ?? -1;
@@ -259,32 +257,22 @@ export default function ViviendaMadrid() {
           });
         };
 
-        lyr.bindPopup(
+        lyr.bindTooltip(
           () => popupHtml(props, metricRef.current),
           {
-            maxWidth: 300,
-            className: 'vivienda-madrid-popup',
-            closeButton: false,
-            autoPan: true,
-            autoPanPadding: [36, 36],
-            interactive: true,
+            sticky: true,
+            direction: 'auto',
+            opacity: 1,
+            maxWidth: 280,
+            className: 'vivienda-madrid-tooltip',
           }
         );
 
         lyr.on('mouseover', () => {
-          if (closePopupTimer != null) {
-            window.clearTimeout(closePopupTimer);
-            closePopupTimer = null;
-          }
           lyr.setStyle({ weight: 2, color: 'rgba(255,255,255,0.85)' });
-          lyr.openPopup();
         });
         lyr.on('mouseout', () => {
           resetStyle();
-          closePopupTimer = window.setTimeout(() => {
-            lyr.closePopup();
-            closePopupTimer = null;
-          }, 220);
         });
       },
     }).addTo(map);
@@ -321,11 +309,7 @@ export default function ViviendaMadrid() {
       </header>
 
       <main className="w-full max-w-6xl flex flex-col gap-4">
-        <p className="text-neutral-400 font-mono text-xs leading-relaxed max-w-3xl">
-          Precios medios por municipio (venta y alquiler por m²), enlazados con límites administrativos. La
-          rentabilidad es alquiler anual sobre precio de compra por m² (renta bruta aproximada). Solo se dibujan
-          áreas con dato para la métrica elegida.
-        </p>
+        
 
         {loadError && (
           <div className="rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-3 text-sm text-red-200 font-mono">
@@ -354,7 +338,7 @@ export default function ViviendaMadrid() {
                   Leyenda
                 </span>
                 <div
-                  className="flex h-10 min-h-10 w-full items-stretch gap-3 font-mono text-sm text-neutral-400"
+                  className="flex h-8 min-h-8 w-full items-stretch gap-2.5 font-mono text-xs text-neutral-400"
                   role="group"
                   aria-labelledby="map-leyenda-label"
                 >
@@ -399,10 +383,12 @@ export default function ViviendaMadrid() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-neutral-600 font-mono text-[10px]">
-          <MapIcon size={14} aria-hidden />
-          <span>Leaflet · Carto dark_all (mismo estilo oscuro que Dark Matter en raster)</span>
-        </div>
+
+        <p className="text-neutral-500 font-mono text-xs leading-relaxed max-w-8xl">
+          Precios medios por municipio (venta y alquiler por m²), enlazados con límites administrativos. La rentabilidad es alquiler anual sobre precio de compra por m² (renta bruta aproximada). Solo se dibujan
+          áreas con dato para la métrica elegida.
+        </p>
+
       </main>
 
       <style>{`
@@ -419,23 +405,31 @@ export default function ViviendaMadrid() {
         .leaflet-map-root .leaflet-control-attribution a {
           color: #d4d4d4;
         }
-        .leaflet-map-root .leaflet-popup-content-wrapper {
-          border-radius: 10px;
+        .leaflet-map-root .leaflet-tooltip.vivienda-madrid-tooltip {
           background: #0a0a0a;
           color: #e5e5e5;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 8px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+          padding: 10px 14px;
+          font-weight: normal;
+          pointer-events: none;
         }
-        .leaflet-map-root .leaflet-popup-tip {
-          background: #0a0a0a;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: none;
+        .leaflet-map-root .vivienda-madrid-tooltip .leaflet-tooltip-content {
+          margin: 0;
+          padding: 0;
         }
-        .leaflet-map-root .leaflet-popup-content {
-          margin: 10px 12px;
+        .leaflet-map-root .leaflet-tooltip-top.vivienda-madrid-tooltip::before {
+          border-top-color: #0a0a0a;
         }
-        .leaflet-map-root .vivienda-madrid-popup .leaflet-popup-close-button {
-          color: #a3a3a3;
+        .leaflet-map-root .leaflet-tooltip-bottom.vivienda-madrid-tooltip::before {
+          border-bottom-color: #0a0a0a;
+        }
+        .leaflet-map-root .leaflet-tooltip-left.vivienda-madrid-tooltip::before {
+          border-left-color: #0a0a0a;
+        }
+        .leaflet-map-root .leaflet-tooltip-right.vivienda-madrid-tooltip::before {
+          border-right-color: #0a0a0a;
         }
       `}</style>
     </div>

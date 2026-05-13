@@ -93,8 +93,8 @@ export function Select<T extends string = string>({
               setOpen(false);
             }
           }}
-          className={`
-            px-4 ${compact ? 'py-2 text-xs' : 'py-3 text-sm'} text-left font-mono cursor-pointer
+            className={`
+            px-4 ${compact ? 'py-1.5 text-[11px]' : 'py-3 text-sm'} text-left font-mono cursor-pointer
             transition-colors duration-150
             ${opt.value === value ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'}
           `}
@@ -124,7 +124,7 @@ export function Select<T extends string = string>({
             focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50
             transition-all duration-300 shadow-inner
             cursor-pointer flex items-center justify-between
-            ${compact ? 'h-10 min-h-10 px-3 text-sm' : 'py-4 pl-4 pr-4 text-lg'}
+            ${compact ? 'h-8 min-h-8 px-2.5 text-xs' : 'py-4 pl-4 pr-4 text-lg'}
           `}
           aria-expanded={open}
           aria-haspopup="listbox"
@@ -132,7 +132,7 @@ export function Select<T extends string = string>({
         >
           <span className="truncate">{selected?.label ?? value}</span>
           <ChevronDown
-            className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-neutral-400 shrink-0 ml-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            className={`${compact ? 'w-3.5 h-3.5' : 'w-5 h-5'} text-neutral-400 shrink-0 ml-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             aria-hidden
           />
         </button>
