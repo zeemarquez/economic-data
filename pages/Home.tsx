@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
-import { Calculator, Percent, PieChart, Zap, ChevronDown, LineChart } from 'lucide-react';
+import { Calculator, Percent, PieChart, Zap, ChevronDown, LineChart, Map } from 'lucide-react';
 
 const PAGES = [
+  {
+    path: '/vivienda-madrid',
+    title: 'Vivienda Madrid',
+    description:
+      'Mapa de municipios: precio de venta y alquiler por m², rentabilidad aproximada y filtros por zona.',
+    icon: <Map size={20} />,
+  },
   {
     path: '/inflation',
     title: 'Inflation',

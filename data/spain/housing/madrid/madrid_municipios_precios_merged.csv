@@ -1,0 +1,337 @@
+id,municipio,uri,precio_venta_eur_m2,precio_alquiler_eur_m2_mes,lat,lon,nivel,parent_uri
+1,Ajalvir,ajalvir-madrid,,,40.53423,-3.480782,municipio,
+2,Alameda del Valle,alameda-del-valle-madrid,,,40.917718,-3.843822,municipio,
+3,Alcalá de Henares,alcala-de-henares-madrid,2786.6,13.39,40.481954,-3.363981,municipio,
+4,Alcobendas,alcobendas-madrid,3962.42,16.14,40.540008,-3.635849,municipio,
+5,Alcorcón,alcorcon-madrid,3259.44,14.16,40.3493,-3.828429,municipio,
+6,Aldea del Fresno,aldea-del-fresno-madrid,,,40.321521,-4.19936,municipio,
+7,Algete,algete-madrid,2345.43,,40.59613,-3.497448,municipio,
+8,Alpedrete,alpedrete-madrid,2619.9,,40.659926,-4.025136,municipio,
+9,Ambite,ambite-madrid,,,40.328972,-3.181211,municipio,
+10,Anchuelo,anchuelo-madrid,,,40.465386,-3.26892,municipio,
+11,Aranjuez,aranjuez-madrid,2191.2,11.79,40.032229,-3.60401,municipio,
+12,Arganda,arganda-madrid,2534.13,13.08,40.300791,-3.438163,municipio,
+13,Arroyomolinos,arroyomolinos-madrid,2585.95,,40.272922,-3.915798,municipio,
+14,Atazar,atazar-madrid,,,40.934349,-3.471092,municipio,
+15,Batres,batres-madrid,,,40.209139,-3.921595,municipio,
+16,Becerril de la Sierra,becerril-de-la-sierra-madrid,2245.27,,40.716352,-3.98907,municipio,
+17,Belmonte de Tajo,belmonte-de-tajo-madrid,,,40.133631,-3.339865,municipio,
+18,Berzosa del Lozoya,berzosa-del-lozoya-madrid,,,40.97578,-3.523674,municipio,
+19,Boadilla del Monte,boadilla-del-monte-madrid,3924.06,13.55,40.405349,-3.876466,municipio,
+20,Braojos,braojos-madrid,,,41.040012,-3.642589,municipio,
+21,Brea de Tajo,brea-de-tajo-madrid,,,40.229825,-3.109452,municipio,
+22,Brunete,brunete-madrid,2665.13,,40.40505,-3.997991,municipio,
+23,Buitrago del Lozoya,buitrago-del-lozoya-madrid,,,40.995348,-3.63505,municipio,
+24,Bustarviejo,bustarviejo-madrid,,,40.858777,-3.709763,municipio,
+25,Cabanillas de la Sierra,cabanillas-de-la-sierra-madrid,,,40.821609,-3.625974,municipio,
+26,Cadalso de los Vidrios,cadalso-de-los-vidrios-madrid,,,40.301428,-4.440888,municipio,
+27,Camarma de Esteruelas,camarma-de-esteruelas-madrid,2531.66,,40.549725,-3.378504,municipio,
+28,Campo Real,campo-real-madrid,,,40.338188,-3.381391,municipio,
+29,Canencia,canencia-madrid,,,40.909589,-3.737561,municipio,
+30,Casarrubuelos,casarrubuelos-madrid,,,40.17078,-3.830853,municipio,
+31,Cenicientos,cenicientos-madrid,,,40.263189,-4.46698,municipio,
+32,Cercedilla,cercedilla-madrid,2408.08,,40.741293,-4.0558,municipio,
+33,Cervera de Buitrago,cervera-de-buitrago-madrid,,,40.921132,-3.52934,municipio,
+34,Chinchón,chinchon-madrid,2002.38,,40.140829,-3.423147,municipio,
+35,Ciempozuelos,ciempozuelos-madrid,2261.89,12.95,40.158009,-3.620551,municipio,
+36,Cobeña,cobena-madrid,,,40.567402,-3.511379,municipio,
+37,Collado Mediano,collado-mediano-madrid,2419.69,,40.694371,-4.024721,municipio,
+38,Collado Villalba,collado-villalba-madrid,2555.41,13.09,40.648347,-3.981977,municipio,
+39,Colmenar de Oreja,colmenar-de-oreja-madrid,,,40.10742,-3.387163,municipio,
+40,Colmenar Viejo,colmenar-viejo-madrid,2841.39,13.45,40.662061,-3.749213,municipio,
+41,Colmenarejo,colmenarejo-madrid,2695.3,,40.560726,-4.016525,municipio,
+42,Corpa,corpa-madrid,,,40.423537,-3.265248,municipio,
+43,Coslada,coslada-madrid,3474.56,15.47,40.423802,-3.555288,municipio,
+44,Cubas de la Sagra,cubas-de-la-sagra-madrid,,,40.190835,-3.837837,municipio,
+45,Daganzo de Arriba,daganzo-de-arriba-madrid,2413.51,,40.545195,-3.45785,municipio,
+46,El Álamo,el-alamo-madrid,,,40.23073,-3.990589,municipio,
+47,El Boalo,el-boalo-madrid,,,40.717303,-3.920275,municipio,
+48,El Escorial,el-escorial-madrid,2769.2,,40.583641,-4.128143,municipio,
+49,El Molar,el-molar-madrid,,,40.734516,-3.583236,municipio,
+50,El Vellón,el-vellon-madrid,,,40.767605,-3.58274,municipio,
+51,Estremera,estremera-madrid,,,40.184731,-3.10624,municipio,
+52,Fresnedillas de la Oliva,fresnedillas-de-la-oliva-madrid,,,40.486444,-4.172349,municipio,
+53,Fresno de Torote,fresno-de-torote-madrid,,,40.592268,-3.411968,municipio,
+54,Fuenlabrada,fuenlabrada-madrid,2497.53,13.09,40.282476,-3.792342,municipio,
+55,Fuente del Fresno,fuente-del-fresno-madrid,,,40.593385,-3.598102,municipio,
+56,Fuente el Saz de Jarama,fuente-el-saz-de-jarama-madrid,2376.28,,40.633986,-3.513467,municipio,
+57,Fuentidueña de Tajo,fuentiduena-de-tajo-madrid,,,40.118545,-3.160254,municipio,
+58,Galapagar,galapagar-madrid,2680.35,14.11,40.5774,-4.003737,municipio,
+59,Garganta de los Montes,garganta-de-los-montes-madrid,,,40.921608,-3.686655,municipio,
+60,Gargantilla del Lozoya,gargantilla-del-lozoya-madrid,,,40.964583,-3.717822,municipio,
+61,Gascones,gascones-madrid,,,41.018565,-3.641499,municipio,
+62,Getafe,getafe-madrid,3162.47,14.43,40.307064,-3.733181,municipio,
+63,Griñón,grinon-madrid,2009.35,,40.213661,-3.858148,municipio,
+64,Guadalix de la Sierra,guadalix-de-la-sierra-madrid,,,40.782238,-3.700779,municipio,
+65,Guadarrama,guadarrama-madrid,2678.54,,40.672435,-4.089038,municipio,
+66,Horcajo de la Sierra,horcajo-de-la-sierra-madrid,,,41.068176,-3.585471,municipio,
+67,Horcajuelo de la Sierra,horcajuelo-de-la-sierra-madrid,,,41.060115,-3.545739,municipio,
+68,Hoyo de Manzanares,hoyo-de-manzanares-madrid,2902.55,,40.622733,-3.907205,municipio,
+69,Humanes de Madrid,humanes-de-madrid-madrid,2489.28,,40.250885,-3.8271,municipio,
+70,La Acebeda,la-acebeda-madrid,,,41.086958,-3.624399,municipio,
+71,La Cabrera,la-cabrera-madrid,,,40.865174,-3.612547,municipio,
+72,La Hiruela,la-hiruela-madrid,,,41.077922,-3.455293,municipio,
+73,La Moraleja,la-moraleja-madrid,6706.1,19.39,40.532033,-3.635494,municipio,
+74,La Serna del Monte,la-serna-del-monte-madrid,,,41.030579,-3.625264,municipio,
+75,Las Rozas de Madrid,las-rozas-de-madrid-madrid,4030.6,14.93,40.49331,-3.87584,municipio,
+76,Leganés,leganes-madrid,3120.1,14.65,40.328194,-3.76527,municipio,
+77,Loeches,loeches-madrid,,,40.383499,-3.409299,municipio,
+78,Los Santos de la Humosa,los-santos-de-la-humosa-madrid,,,40.501296,-3.25668,municipio,
+79,Lozoya,lozoya-madrid,,,40.963198,-3.784014,municipio,
+80,Lozoyuela-Navas-Sieteiglesias,lozoyuela-navas-sieteiglesias-madrid,,,40.926338,-3.617638,municipio,
+81,Lupiana,lupiana-madrid,,,,,municipio,
+83,Majadahonda,majadahonda-madrid,4296.79,15.47,40.472842,-3.872354,municipio,
+84,Manzanares el Real,manzanares-el-real-madrid,2542.25,,40.726759,-3.864933,municipio,
+85,Mataelpino,mataelpino-madrid,,,40.73583,-3.945612,municipio,
+86,Meco,meco-madrid,2279,,40.553746,-3.328156,municipio,
+87,Mejorada del Campo,mejorada-del-campo-madrid,2377.28,,40.39719,-3.489625,municipio,
+88,Miraflores de la Sierra,miraflores-de-la-sierra-madrid,2116.95,,40.813753,-3.766724,municipio,
+89,Montejo de la Sierra,montejo-de-la-sierra-madrid,,,41.059353,-3.530299,municipio,
+90,Moraleja de Enmedio,moraleja-de-enmedio-madrid,,,40.261553,-3.861212,municipio,
+91,Moralzarzal,moralzarzal-madrid,2751.04,,40.679152,-3.972176,municipio,
+92,Morata de Tajuña,morata-de-tajuna-madrid,,,40.229368,-3.436682,municipio,
+93,Móstoles,mostoles-madrid,2924.01,13.81,40.323853,-3.864921,municipio,
+94,Navacerrada,navacerrada-madrid,,,40.728793,-4.015168,municipio,
+95,Navalafuente,navalafuente-madrid,,,40.82328,-3.674743,municipio,
+96,Navalagamella,navalagamella-madrid,,,40.469059,-4.122708,municipio,
+97,Navalcarnero,navalcarnero-madrid,2333.93,12.23,40.287717,-4.014299,municipio,
+98,Navarredonda,navarredonda-madrid,,,40.495669,-4.039405,municipio,
+99,Navas del Rey,navas-del-rey-madrid,,,40.386367,-4.25084,municipio,
+100,Nuevo Baztan,nuevo-baztan-madrid,,,40.365712,-3.242757,municipio,
+101,Olmeda de las Fuentes,olmeda-de-las-fuentes-madrid,,,40.369523,-3.22132,municipio,
+102,Orusco,orusco-madrid,,,40.284428,-3.208336,municipio,
+103,Paracuellos de Jarama,paracuellos-de-jarama-madrid,2880.91,,40.504853,-3.531762,municipio,
+104,Parla,parla-madrid,2268.17,13.59,40.237395,-3.77189,municipio,
+105,Patones,patones-madrid,,,40.854819,-3.483954,municipio,
+106,Pedrezuela,pedrezuela-madrid,2374.92,,40.745115,-3.603039,municipio,
+107,Pelayos de la Presa,pelayos-de-la-presa-madrid,,,40.360527,-4.333425,municipio,
+108,Perales de Tajuña,perales-de-tajuna-madrid,,,40.232586,-3.350671,municipio,
+109,Pezuela de las Torres,pezuela-de-las-torres-madrid,,,40.41867,-3.177106,municipio,
+110,Pinilla del Valle,pinilla-del-valle-madrid,,,40.926195,-3.818468,municipio,
+111,Pinto,pinto-madrid,2712.27,14.44,40.240985,-3.700507,municipio,
+112,Piñuécar,pinuecar-madrid,,,41.033062,-3.599367,municipio,
+113,Pozuelo de Alarcón,pozuelo-de-alarcon-madrid,5001.33,20.25,40.434653,-3.814834,municipio,
+114,Prádena del Rincón,pradena-del-rincon-madrid,,,41.044337,-3.540228,municipio,
+115,Puebla de la Sierra,puebla-de-la-sierra-madrid,,,41.012125,-3.444437,municipio,
+116,Puentes Viejas,puentes-viejas-madrid,,,40.968658,-3.594681,municipio,
+117,Rascafría,rascafria-madrid,,,40.903887,-3.880285,municipio,
+118,Redueña,reduena-madrid,,,40.81615,-3.603583,municipio,
+119,Ribatejada,ribatejada-madrid,,,40.661826,-3.410189,municipio,
+120,Rivas-Vaciamadrid,rivas-vaciamadrid-madrid,2803.5,13.71,40.353605,-3.531088,municipio,
+121,Robledillo de la Jara,robledillo-de-la-jara-madrid,,,40.952915,-3.52505,municipio,
+122,Robledo de Chavela,robledo-de-chavela-madrid,,,40.50092,-4.2381,municipio,
+123,Robregordo,robregordo-madrid,,,41.106452,-3.593747,municipio,
+124,San Agustín del Guadalix,san-agustin-del-guadalix-madrid,3203.18,14.6,40.679397,-3.616004,municipio,
+125,San Fernando de Henares,san-fernando-de-henares-madrid,3008.45,14.58,40.424855,-3.535037,municipio,
+126,San Lorenzo de El Escorial,san-lorenzo-de-el-escorial-madrid,2786.6,,40.592667,-4.147164,municipio,
+127,San Martín de la Vega,san-martin-de-la-vega-madrid,2177.67,12.37,40.211046,-3.577181,municipio,
+128,San Martín de Valdeiglesias,san-martin-de-valdeiglesias-madrid,,,40.3625,-4.39865,municipio,
+129,San Sebastián de los Reyes,san-sebastian-de-los-reyes-madrid,3376.79,14.98,40.54737,-3.626059,municipio,
+130,Santa María de la Alameda,santa-maria-de-la-alameda-madrid,,,40.595825,-4.257921,municipio,
+131,Santo Domingo,santo-domingo-madrid,,,40.420426,-3.708572,municipio,
+132,Santorcaz,santorcaz-madrid,,,40.471896,-3.235179,municipio,
+133,Serracines,serracines-madrid,,,40.622154,-3.400417,municipio,
+134,Serranillos del Valle,serranillos-del-valle-madrid,,,40.204451,-3.885199,municipio,
+135,Sevilla la Nueva,sevilla-la-nueva-madrid,2705.65,,40.347542,-4.027527,municipio,
+136,Somosierra,somosierra-madrid,,,41.133207,-3.581478,municipio,
+137,Soto del Real,soto-del-real-madrid,,,40.753362,-3.786846,municipio,
+138,Talamanca de Jarama,talamanca-de-jarama-madrid,,,40.74547,-3.512758,municipio,
+139,Tielmes,tielmes-madrid,,,40.246658,-3.31377,municipio,
+140,Titulcia,titulcia-madrid,,,40.137915,-3.570998,municipio,
+141,Torrejón de Ardoz,torrejon-de-ardoz-madrid,2887.74,14.15,40.458777,-3.479334,municipio,
+142,Torrejón de la Calzada,torrejon-de-la-calzada-madrid,,,40.20068,-3.79933,municipio,
+143,Torrejón de Velasco,torrejon-de-velasco-madrid,,,40.186928,-3.776907,municipio,
+144,Torrelaguna,torrelaguna-madrid,,,40.827715,-3.538293,municipio,
+145,Torrelodones,torrelodones-madrid,2766.78,13.88,40.576281,-3.928603,municipio,
+146,Torremocha de Jarama,torremocha-de-jarama-madrid,,,40.835121,-3.495802,municipio,
+147,Torres de la Alameda,torres-de-la-alameda-madrid,,,40.402152,-3.360625,municipio,
+148,Tres Cantos,tres-cantos-madrid,3904.42,,40.601235,-3.703848,municipio,
+149,Valdaracete,valdaracete-madrid,,,40.210651,-3.195448,municipio,
+150,Valdeavero,valdeavero-madrid,,,40.630841,-3.332859,municipio,
+151,Valdelagua,valdelagua-madrid,,,40.363843,-4.016894,municipio,
+152,Valdelaguna,valdelaguna-madrid,,,40.160578,-3.367827,municipio,
+153,Valdemanco,valdemanco-madrid,,,40.862528,-3.662218,municipio,
+154,Valdemaqueda,valdemaqueda-madrid,,,40.51103,-4.297773,municipio,
+155,Valdemorillo,valdemorillo-madrid,2317.81,,40.501677,-4.068888,municipio,
+156,Valdemoro,valdemoro-madrid,2459.03,13.54,40.188684,-3.670573,municipio,
+157,Valdeolmos-Alalpardo,valdeolmos-alalpardo-madrid,,,40.638543,-3.453244,municipio,
+158,Valdepiélagos,valdepielagos-madrid,,,40.760327,-3.465858,municipio,
+159,Valdetorres de Jarama,valdetorres-de-jarama-madrid,,,40.695648,-3.514656,municipio,
+160,Valdilecha,valdilecha-madrid,,,40.292685,-3.30021,municipio,
+161,Valverde de Alcala,valverde-de-alcala-madrid,,,40.418036,-3.299678,municipio,
+162,Velilla de San Antonio,velilla-de-san-antonio-madrid,,,40.367177,-3.487481,municipio,
+163,Venturada,venturada-madrid,,,40.798476,-3.620728,municipio,
+164,Villa del Prado,villa-del-prado-madrid,,,40.276475,-4.304803,municipio,
+165,Villaconejos,villaconejos-madrid,,,40.104008,-3.485028,municipio,
+166,Villalbilla,villalbilla-madrid,2012.14,,40.432367,-3.298782,municipio,
+167,Villamanrique de Tajo,villamanrique-de-tajo-madrid,,,40.068697,-3.240078,municipio,
+168,Villamanta,villamanta-madrid,,,40.292655,-4.126747,municipio,
+169,Villamantilla,villamantilla-madrid,,,40.343044,-4.130223,municipio,
+170,Villanueva de la Cañada,villanueva-de-la-canada-madrid,2968.79,18.21,40.447211,-4.002795,municipio,
+171,Villanueva de Perales,villanueva-de-perales-madrid,,,40.34554,-4.102318,municipio,
+172,Villanueva del Pardillo,villanueva-del-pardillo-madrid,3181.47,15.05,40.494923,-3.960006,municipio,
+173,Villar del Olmo,villar-del-olmo-madrid,,,40.336381,-3.235562,municipio,
+174,Villarejo de Salvanés,villarejo-de-salvanes-madrid,,,40.168358,-3.273876,municipio,
+175,Villaviciosa de Odón,villaviciosa-de-odon-madrid,3348.81,19.08,40.357379,-3.900233,municipio,
+176,Villavieja del Lozoya,villavieja-del-lozoya-madrid,,,41.006362,-3.671629,municipio,
+177,Zarzalejo,zarzalejo-madrid,,,40.548302,-4.18159,municipio,
+178,Arganzuela,madrid/arganzuela,6269.71,21.81,,,distrito,madrid-madrid
+179,Barajas,madrid/barajas,4973.27,16.85,,,distrito,madrid-madrid
+180,Barrio de Salamanca,madrid/barrio-de-salamanca,10178.45,27.99,,,distrito,madrid-madrid
+181,Carabanchel,madrid/carabanchel,3656.42,18.08,,,distrito,madrid-madrid
+182,Centro,madrid/centro,7523.9,27.13,,,distrito,madrid-madrid
+183,Chamartín,madrid/chamartin,8083.47,23.33,,,distrito,madrid-madrid
+184,Chamberí,madrid/chamberi,8994.54,26.57,,,distrito,madrid-madrid
+185,Ciudad Lineal,madrid/ciudad-lineal,5058.27,19.59,,,distrito,madrid-madrid
+186,Fuencarral,madrid/fuencarral,5369.49,18.12,,,distrito,madrid-madrid
+187,Hortaleza,madrid/hortaleza,5320.78,18.72,,,distrito,madrid-madrid
+188,Latina,madrid/latina,3883.35,18.48,,,distrito,madrid-madrid
+189,Moncloa,madrid/moncloa,6230.23,21.6,,,distrito,madrid-madrid
+190,Moratalaz,madrid/moratalaz,4435.01,16.25,,,distrito,madrid-madrid
+191,Puente de Vallecas,madrid/puente-de-vallecas,3304.33,20.0,,,distrito,madrid-madrid
+192,Retiro,madrid/retiro,7751.66,24.38,,,distrito,madrid-madrid
+193,San Blas,madrid/san-blas,3959.29,17.37,,,distrito,madrid-madrid
+194,Tetuán,madrid/tetuan,5979.6,22.85,,,distrito,madrid-madrid
+195,Usera,madrid/usera,3523.14,19.96,,,distrito,madrid-madrid
+196,Vicálvaro,madrid/vicalvaro,3827.07,17.35,,,distrito,madrid-madrid
+197,Villa de Vallecas,madrid/villa-de-vallecas,3674.26,17.92,,,distrito,madrid-madrid
+198,Villaverde,madrid/villaverde,2934.09,17.44,,,distrito,madrid-madrid
+199,Chueca-Justicia,madrid/centro/chueca-justicia,8910.89,29.5,,,barrio,madrid/centro
+200,Huertas-Cortes,madrid/centro/huertas-cortes,8162.26,26.36,,,barrio,madrid/centro
+201,Lavapiés-Embajadores,madrid/centro/lavapies-embajadores,6082.47,25.56,,,barrio,madrid/centro
+202,Malasaña-Universidad,madrid/centro/malasana-universidad,7829.37,27.5,,,barrio,madrid/centro
+203,Palacio,madrid/centro/palacio,7500.01,27.01,,,barrio,madrid/centro
+204,Sol,madrid/centro/sol,7976.74,26.36,,,barrio,madrid/centro
+205,Acacias,madrid/arganzuela/acacias,6485.71,21.47,,,barrio,madrid/arganzuela
+206,Chopera,madrid/arganzuela/chopera,5863.64,22.22,,,barrio,madrid/arganzuela
+207,Delicias,madrid/arganzuela/delicias,6179.78,22.5,,,barrio,madrid/arganzuela
+208,Imperial,madrid/arganzuela/imperial,6269.23,22.15,,,barrio,madrid/arganzuela
+209,Legazpi,madrid/arganzuela/legazpi,6526.92,20.0,,,barrio,madrid/arganzuela
+210,Palos de la Frontera,madrid/arganzuela/palos-de-la-frontera,6331.12,22.1,,,barrio,madrid/arganzuela
+211,Aeropuerto,madrid/barajas/aeropuerto,,,,,barrio,madrid/barajas
+212,Alameda de Osuna,madrid/barajas/alameda-de-osuna,5464.5,,,,barrio,madrid/barajas
+213,Campo de las Naciones-Corralejos,madrid/barajas/campo-de-las-naciones-corralejos,,,,,barrio,madrid/barajas
+214,Casco Histórico de Barajas,madrid/barajas/casco-historico-de-barajas,,,,,barrio,madrid/barajas
+215,Timón,madrid/barajas/timon,,15.98,,,barrio,madrid/barajas
+216,Castellana,madrid/barrio-de-salamanca/castellana,11391.12,29.29,,,barrio,madrid/barrio-de-salamanca
+217,Fuente del Berro,madrid/barrio-de-salamanca/fuente-del-berro,8096.44,22.53,,,barrio,madrid/barrio-de-salamanca
+218,Goya,madrid/barrio-de-salamanca/goya,10419.28,28.89,,,barrio,madrid/barrio-de-salamanca
+219,Guindalera,madrid/barrio-de-salamanca/guindalera,7388.75,23.32,,,barrio,madrid/barrio-de-salamanca
+220,Lista,madrid/barrio-de-salamanca/lista,10670.3,28.95,,,barrio,madrid/barrio-de-salamanca
+221,Recoletos,madrid/barrio-de-salamanca/recoletos,11183.95,32.17,,,barrio,madrid/barrio-de-salamanca
+222,Abrantes,madrid/carabanchel/abrantes,3301.94,,,,barrio,madrid/carabanchel
+223,Buena Vista,madrid/carabanchel/buena-vista,3332.3,17.6,,,barrio,madrid/carabanchel
+224,Comillas,madrid/carabanchel/comillas,4552.94,18.67,,,barrio,madrid/carabanchel
+225,Opañel,madrid/carabanchel/opanel,4045.99,18.46,,,barrio,madrid/carabanchel
+226,Pau de Carabanchel,madrid/carabanchel/pau-de-carabanchel,4425.2,17.22,,,barrio,madrid/carabanchel
+227,Puerta Bonita,madrid/carabanchel/puerta-bonita,3444.79,17.05,,,barrio,madrid/carabanchel
+228,San Isidro,madrid/carabanchel/san-isidro,3633.4,19.38,,,barrio,madrid/carabanchel
+229,Vista Alegre,madrid/carabanchel/vista-alegre,3559.94,17.76,,,barrio,madrid/carabanchel
+230,Bernabéu-Hispanoamérica,madrid/chamartin/bernabeu-hispanoamerica,8512.0,22.74,,,barrio,madrid/chamartin
+231,Castilla,madrid/chamartin/castilla,7079.02,21.4,,,barrio,madrid/chamartin
+232,Ciudad Jardín,madrid/chamartin/ciudad-jardin,7333.15,24.02,,,barrio,madrid/chamartin
+233,El Viso,madrid/chamartin/el-viso,9469.85,24.9,,,barrio,madrid/chamartin
+234,Nueva España,madrid/chamartin/nueva-espana,8313.39,23.25,,,barrio,madrid/chamartin
+235,Prosperidad,madrid/chamartin/prosperidad,7343.37,22.93,,,barrio,madrid/chamartin
+236,Almagro,madrid/chamberi/almagro,10579.59,28.33,,,barrio,madrid/chamberi
+237,Arapiles,madrid/chamberi/arapiles,8527.27,25.0,,,barrio,madrid/chamberi
+238,Gaztambide,madrid/chamberi/gaztambide,8096.59,25.0,,,barrio,madrid/chamberi
+239,Nuevos Ministerios-Ríos Rosas,madrid/chamberi/nuevos-ministerios-rios-rosas,8851.41,26.08,,,barrio,madrid/chamberi
+240,Trafalgar,madrid/chamberi/trafalgar,9223.08,29.17,,,barrio,madrid/chamberi
+241,Vallehermoso,madrid/chamberi/vallehermoso,7827.8,23.06,,,barrio,madrid/chamberi
+242,Atalaya,madrid/ciudad-lineal/atalaya,,,,,barrio,madrid/ciudad-lineal
+243,Colina,madrid/ciudad-lineal/colina,6911.73,21.25,,,barrio,madrid/ciudad-lineal
+244,Concepción,madrid/ciudad-lineal/concepcion,5378.64,18.78,,,barrio,madrid/ciudad-lineal
+245,Costillares,madrid/ciudad-lineal/costillares,5914.02,19.08,,,barrio,madrid/ciudad-lineal
+246,Pueblo Nuevo,madrid/ciudad-lineal/pueblo-nuevo,4379.31,20.42,,,barrio,madrid/ciudad-lineal
+247,Quintana,madrid/ciudad-lineal/quintana,5082.21,18.72,,,barrio,madrid/ciudad-lineal
+248,San Juan Bautista,madrid/ciudad-lineal/san-juan-bautista,6668.97,20.2,,,barrio,madrid/ciudad-lineal
+249,San Pascual,madrid/ciudad-lineal/san-pascual,6005.45,19.23,,,barrio,madrid/ciudad-lineal
+250,Ventas,madrid/ciudad-lineal/ventas,4658.34,20.0,,,barrio,madrid/ciudad-lineal
+251,Arroyo del Fresno,madrid/fuencarral/arroyo-del-fresno,,,,,barrio,madrid/fuencarral
+252,El Pardo,madrid/fuencarral/el-pardo,,,,,barrio,madrid/fuencarral
+253,Fuentelarreina,madrid/fuencarral/fuentelarreina,,,,,barrio,madrid/fuencarral
+254,La Paz,madrid/fuencarral/la-paz,5696.51,,,,barrio,madrid/fuencarral
+255,Las Tablas,madrid/fuencarral/las-tablas,4988.34,16.5,,,barrio,madrid/fuencarral
+256,Mirasierra,madrid/fuencarral/mirasierra,6526.54,17.79,,,barrio,madrid/fuencarral
+257,Montecarmelo,madrid/fuencarral/montecarmelo,6474.11,17.25,,,barrio,madrid/fuencarral
+258,Peñagrande,madrid/fuencarral/penagrande,5147.01,18.3,,,barrio,madrid/fuencarral
+259,Pilar,madrid/fuencarral/pilar,5476.19,20.34,,,barrio,madrid/fuencarral
+260,Tres Olivos - Valverde,madrid/fuencarral/tres-olivos-valverde,4303.73,19.39,,,barrio,madrid/fuencarral
+261,Apóstol Santiago,madrid/hortaleza/apostol-santiago,4838.75,,,,barrio,madrid/hortaleza
+262,Canillas,madrid/hortaleza/canillas,5068.37,17.0,,,barrio,madrid/hortaleza
+263,Conde Orgaz-Piovera,madrid/hortaleza/conde-orgaz-piovera,6324.25,18.71,,,barrio,madrid/hortaleza
+264,Palomas,madrid/hortaleza/palomas,5514.81,,,,barrio,madrid/hortaleza
+265,Pinar del Rey,madrid/hortaleza/pinar-del-rey,4850.42,19.66,,,barrio,madrid/hortaleza
+266,Sanchinarro,madrid/hortaleza/sanchinarro,5909.09,18.93,,,barrio,madrid/hortaleza
+267,Valdebebas - Valdefuentes,madrid/hortaleza/valdebebas-valdefuentes,5660.86,17.99,,,barrio,madrid/hortaleza
+268,Virgen del Cortijo - Manoteras,madrid/hortaleza/virgen-del-cortijo-manoteras,,20.15,,,barrio,madrid/hortaleza
+269,Águilas,madrid/latina/aguilas,3708.06,16.03,,,barrio,madrid/latina
+270,Aluche,madrid/latina/aluche,3619.26,16.68,,,barrio,madrid/latina
+271,Campamento,madrid/latina/campamento,3750.04,16.67,,,barrio,madrid/latina
+272,Cuatro Vientos,madrid/latina/cuatro-vientos,,,,,barrio,madrid/latina
+273,Los Cármenes,madrid/latina/los-carmenes,3841.45,,,,barrio,madrid/latina
+274,Lucero,madrid/latina/lucero,3808.08,18.33,,,barrio,madrid/latina
+275,Puerta del Ángel,madrid/latina/puerta-del-angel,4434.18,21.38,,,barrio,madrid/latina
+276,Aravaca,madrid/moncloa/aravaca,5606.16,16.98,,,barrio,madrid/moncloa
+277,Argüelles,madrid/moncloa/arguelles,7846.53,26.14,,,barrio,madrid/moncloa
+278,Casa de Campo,madrid/moncloa/casa-de-campo,6366.54,20.64,,,barrio,madrid/moncloa
+279,Ciudad Universitaria,madrid/moncloa/ciudad-universitaria,5977.86,20.83,,,barrio,madrid/moncloa
+280,El Plantío,madrid/moncloa/el-plantio,4048.58,,,,barrio,madrid/moncloa
+281,Valdemarín,madrid/moncloa/valdemarin,5888.53,18.98,,,barrio,madrid/moncloa
+282,Valdezarza,madrid/moncloa/valdezarza,5246.55,19.46,,,barrio,madrid/moncloa
+283,Fontarrón,madrid/moratalaz/fontarron,4060.97,,,,barrio,madrid/moratalaz
+284,Horcajo,madrid/moratalaz/horcajo,,,,,barrio,madrid/moratalaz
+285,Marroquina,madrid/moratalaz/marroquina,4752.48,16.25,,,barrio,madrid/moratalaz
+286,Media Legua,madrid/moratalaz/media-legua,4471.58,,,,barrio,madrid/moratalaz
+287,Pavones,madrid/moratalaz/pavones,,,,,barrio,madrid/moratalaz
+288,Vinateros,madrid/moratalaz/vinateros,4388.1,,,,barrio,madrid/moratalaz
+289,Entrevías,madrid/puente-de-vallecas/entrevias,2746.89,,,,barrio,madrid/puente-de-vallecas
+290,Numancia,madrid/puente-de-vallecas/numancia,3527.78,21.97,,,barrio,madrid/puente-de-vallecas
+291,Palomeras Bajas,madrid/puente-de-vallecas/palomeras-bajas,3378.81,17.39,,,barrio,madrid/puente-de-vallecas
+292,Palomeras sureste,madrid/puente-de-vallecas/palomeras-sureste,3335.69,15.87,,,barrio,madrid/puente-de-vallecas
+293,Portazgo,madrid/puente-de-vallecas/portazgo,3391.67,,,,barrio,madrid/puente-de-vallecas
+294,San Diego,madrid/puente-de-vallecas/san-diego,3345.02,21.5,,,barrio,madrid/puente-de-vallecas
+295,Adelfas,madrid/retiro/adelfas,6034.85,21.32,,,barrio,madrid/retiro
+296,Estrella,madrid/retiro/estrella,6481.48,22.35,,,barrio,madrid/retiro
+297,Ibiza,madrid/retiro/ibiza,9588.24,27.2,,,barrio,madrid/retiro
+298,Jerónimos,madrid/retiro/jeronimos,7759.74,26.67,,,barrio,madrid/retiro
+299,Niño Jesús,madrid/retiro/nino-jesus,7619.81,23.75,,,barrio,madrid/retiro
+300,Pacífico,madrid/retiro/pacifico,6732.56,21.58,,,barrio,madrid/retiro
+301,Amposta,madrid/san-blas/amposta,3309.09,,,,barrio,madrid/san-blas
+302,Arcos,madrid/san-blas/arcos,3567.67,,,,barrio,madrid/san-blas
+303,Canillejas,madrid/san-blas/canillejas,3831.7,19.32,,,barrio,madrid/san-blas
+304,Hellín,madrid/san-blas/hellin,3406.78,,,,barrio,madrid/san-blas
+305,Rejas,madrid/san-blas/rejas,4177.23,14.17,,,barrio,madrid/san-blas
+306,Rosas,madrid/san-blas/rosas,4952.37,,,,barrio,madrid/san-blas
+307,Salvador,madrid/san-blas/salvador,5692.75,,,,barrio,madrid/san-blas
+308,Simancas,madrid/san-blas/simancas,3911.17,18.38,,,barrio,madrid/san-blas
+309,Bellas Vistas,madrid/tetuan/bellas-vistas,5523.36,22.81,,,barrio,madrid/tetuan
+310,Berruguete,madrid/tetuan/berruguete,5244.5,21.49,,,barrio,madrid/tetuan
+311,Cuatro Caminos,madrid/tetuan/cuatro-caminos,7365.15,24.49,,,barrio,madrid/tetuan
+312,Cuzco-Castillejos,madrid/tetuan/cuzco-castillejos,7253.89,23.49,,,barrio,madrid/tetuan
+313,Valdeacederas,madrid/tetuan/valdeacederas,5190.8,20.34,,,barrio,madrid/tetuan
+314,Ventilla-Almenara,madrid/tetuan/ventilla-almenara,5065.79,23.33,,,barrio,madrid/tetuan
+315,12 de Octubre-Orcasur,madrid/usera/12-de-octubre-orcasur,2618.18,,,,barrio,madrid/usera
+316,Almendrales,madrid/usera/almendrales,3838.73,,,,barrio,madrid/usera
+317,Moscardó,madrid/usera/moscardo,3803.25,19.3,,,barrio,madrid/usera
+318,Orcasitas,madrid/usera/orcasitas,2825.55,,,,barrio,madrid/usera
+319,Pradolongo,madrid/usera/pradolongo,3482.95,,,,barrio,madrid/usera
+320,San Fermín,madrid/usera/san-fermin,3334.81,,,,barrio,madrid/usera
+321,Zofío,madrid/usera/zofio,3597.9,,,,barrio,madrid/usera
+322,Ambroz,madrid/vicalvaro/ambroz,3705.09,,,,barrio,madrid/vicalvaro
+323,Casco Histórico de Vicálvaro,madrid/vicalvaro/casco-historico-de-vicalvaro,3460.61,,,,barrio,madrid/vicalvaro
+324,El Cañaveral,madrid/vicalvaro/el-canaveral,4394.75,17.56,,,barrio,madrid/vicalvaro
+325,Los Ahijones,madrid/vicalvaro/los-ahijones,4394.75,17.56,,,barrio,madrid/vicalvaro
+326,Los Berrocales,madrid/vicalvaro/los-berrocales,4394.75,17.56,,,barrio,madrid/vicalvaro
+327,Los Cerros,madrid/vicalvaro/los-cerros,4394.75,17.56,,,barrio,madrid/vicalvaro
+328,Valdebernardo - Valderrivas,madrid/vicalvaro/valdebernardo-valderrivas,4186.05,,,,barrio,madrid/vicalvaro
+329,Casco Histórico de Vallecas,madrid/villa-de-vallecas/casco-historico-de-vallecas,3281.37,18.34,,,barrio,madrid/villa-de-vallecas
+330,Ensanche de Vallecas - La Gavia,madrid/villa-de-vallecas/ensanche-de-vallecas-la-gavia,4161.83,17.86,,,barrio,madrid/villa-de-vallecas
+331,Santa Eugenia,madrid/villa-de-vallecas/santa-eugenia,3933.33,,,,barrio,madrid/villa-de-vallecas
+332,Valdecarros,madrid/villa-de-vallecas/valdecarros,4161.83,17.86,,,barrio,madrid/villa-de-vallecas
+333,Butarque,madrid/villaverde/butarque,3318.1,17.45,,,barrio,madrid/villaverde
+334,Los Angeles,madrid/villaverde/los-angeles,3285.96,,,,barrio,madrid/villaverde
+335,Los Rosales,madrid/villaverde/los-rosales,3013.6,,,,barrio,madrid/villaverde
+336,San Cristóbal,madrid/villaverde/san-cristobal,2304.69,,,,barrio,madrid/villaverde
+337,Villaverde Alto,madrid/villaverde/villaverde-alto,2804.09,18.38,,,barrio,madrid/villaverde

@@ -14,6 +14,8 @@ interface SelectProps<T extends string = string> {
   onChange: (value: T) => void;
   id?: string;
   className?: string;
+  /** Smaller control for dense toolbars (e.g. map filters). */
+  compact?: boolean;
 }
 
 export function Select<T extends string = string>({
@@ -23,6 +25,7 @@ export function Select<T extends string = string>({
   onChange,
   id,
   className = '',
+  compact = false,
 }: SelectProps<T>) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -91,7 +94,7 @@ export function Select<T extends string = string>({
             }
           }}
           className={`
-            px-4 py-3 text-left text-sm font-mono cursor-pointer
+            px-4 ${compact ? 'py-2 text-xs' : 'py-3 text-sm'} text-left font-mono cursor-pointer
             transition-colors duration-150
             ${opt.value === value ? 'bg-neutral-800 text-white' : 'text-neutral-300 hover:bg-neutral-800/70 hover:text-white'}
           `}
@@ -106,7 +109,7 @@ export function Select<T extends string = string>({
     <div ref={containerRef} className={`flex flex-col gap-2 w-full ${className}`}>
       <label
         htmlFor={id}
-        className="text-xs uppercase tracking-widest text-neutral-500 font-mono pl-1"
+        className={`${compact ? 'text-[10px] tracking-[0.2em]' : 'text-xs tracking-widest'} uppercase text-neutral-500 font-mono pl-1`}
       >
         {label}
       </label>
@@ -116,21 +119,20 @@ export function Select<T extends string = string>({
           type="button"
           id={id}
           onClick={() => setOpen((o) => !o)}
-          className="
-            w-full bg-neutral-900/50 border border-neutral-800 rounded-lg
-            py-4 pl-4 pr-4
-            text-left text-lg font-mono text-white
+          className={`
+            w-full bg-neutral-900/50 border border-neutral-800 rounded-lg text-left font-mono text-white
             focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50
             transition-all duration-300 shadow-inner
             cursor-pointer flex items-center justify-between
-          "
+            ${compact ? 'h-10 min-h-10 px-3 text-sm' : 'py-4 pl-4 pr-4 text-lg'}
+          `}
           aria-expanded={open}
           aria-haspopup="listbox"
           aria-labelledby={id ? `${id}-label` : undefined}
         >
           <span className="truncate">{selected?.label ?? value}</span>
           <ChevronDown
-            className={`w-5 h-5 text-neutral-400 shrink-0 ml-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-neutral-400 shrink-0 ml-2 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             aria-hidden
           />
         </button>
