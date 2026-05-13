@@ -395,6 +395,18 @@ export default function ViviendaMadrid() {
         .leaflet-map-root .leaflet-container {
           background: #0a0a0a;
           font-family: inherit;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .leaflet-map-root .leaflet-overlay-pane .leaflet-interactive:focus,
+        .leaflet-map-root .leaflet-overlay-pane .leaflet-interactive:focus-visible {
+          outline: none !important;
+        }
+        .leaflet-map-root .leaflet-overlay-pane svg path:focus,
+        .leaflet-map-root .leaflet-overlay-pane svg path:focus-visible {
+          outline: none !important;
+        }
+        .leaflet-map-root .leaflet-overlay-pane svg:focus {
+          outline: none !important;
         }
         .leaflet-map-root .leaflet-control-attribution {
           background: rgba(10, 10, 10, 0.85);
