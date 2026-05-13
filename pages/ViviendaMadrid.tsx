@@ -324,8 +324,7 @@ export default function ViviendaMadrid() {
         <p className="text-neutral-400 font-mono text-xs leading-relaxed max-w-3xl">
           Precios medios por municipio (venta y alquiler por m²), enlazados con límites administrativos. La
           rentabilidad es alquiler anual sobre precio de compra por m² (renta bruta aproximada). Solo se dibujan
-          áreas con dato para la métrica elegida. Fuente: datos en
-          <code className="text-neutral-500 mx-1">data/spain/housing/madrid/</code>.
+          áreas con dato para la métrica elegida.
         </p>
 
         {loadError && (
