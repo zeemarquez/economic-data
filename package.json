@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "build:data": "node scripts/buildInflationData.mjs",
-    "build:energy": "node --env-file=.env scripts/buildEnergyData.mjs"
+    "build:energy": "node scripts/buildEnergyData.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",
@@ -22,6 +22,7 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "fflate": "^0.8.3",
+    "pdfjs-dist": "^6.0.227",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

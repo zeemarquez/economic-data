@@ -2,40 +2,38 @@
  * OMIE day-ahead bids -> supply curve BY TECHNOLOGY (baked JSON for the dashboard)
  * ================================================================================
  * Reconstructs the real per-technology day-ahead supply curve from OMIE's published
- * per-unit bids (`curva_pbc_uof`), joined to a unit->technology crosswalk built
- * automatically from the ESIOS unit registries.
+ * per-unit bids (`curva_pbc_uof`), joined to OMIE's own official unit->technology
+ * registry (LISTA_UNIDADES). Same code namespace as the bids -> ~99% coverage,
+ * Spanish and Portuguese (MIBEL) units alike. No external token required.
  *
- *   node --env-file=.env scripts/buildEnergyData.mjs
- *   (or:  ESIOS_API_KEY=xxxx node scripts/buildEnergyData.mjs )
+ *   npm run build:energy      (or: node scripts/buildEnergyData.mjs)
  *
  * Output: public/data/omie_bids_latest.json   (fetched at runtime by the page)
  *
- * DATA SOURCES (all real, all public)
- *   1. Bids:     OMIE curva_pbc_uof monthly ZIP -> one row per offer:
- *                Periodo;Fecha;Pais;Unidad;Tipo;Potencia;Precio;Ofertada(O)/Casada(C);Tipologia
- *                Unit-identified bids are public only AFTER a ~90-day confidentiality
- *                window, so the "latest available" day is always ~3 months lagged.
- *   2. Crosswalk: ESIOS "Unidades de programacion" (archive 82) + "Unidades fisicas"
- *                (archive 81), which carry "Tipo de produccion" (technology) per unit.
- *                Requires a free ESIOS personal token (ESIOS_API_KEY).
+ * DATA SOURCES (all real, all public, all OMIE)
+ *   1. Bids:      curva_pbc_uof monthly ZIP -> one row per offer:
+ *                 Periodo;Fecha;Pais;Unidad;Tipo(V/C);Potencia;Precio;O(fertada)/C(asada);Tipologia
+ *                 Unit-identified bids are public only AFTER a ~90-day confidentiality
+ *                 window, so the "latest available" day is always ~3 months lagged.
+ *   2. Crosswalk: LISTA_UNIDADES.PDF ("LISTADO DE UNIDADES OFERTANTES VIGENTES") -> the
+ *                 TECNOLOGIA of every OMIE offer unit, in OMIE's own code namespace.
+ *   3. Clearing:  marginalpdbc -> official day-ahead marginal price per 15-min period.
  *
  * HONEST LIMITS (surfaced in the dashboard, not hidden)
  *   - >=90-day lag: the current month's unit-identified bids are confidential.
- *   - OMIE offer-unit codes only partially overlap ESIOS UP/UF codes, so a share of
- *     volume (esp. Portuguese MIBEL units and aggregated/portfolio renewables) stays
- *     "Unmapped". Mapped coverage is reported in the output meta and shown in the UI.
- *   - The period granularity is the new 15-min market time unit (H{1..24}Q{1..4}).
+ *   - The period granularity is the 15-min market time unit (H{1..24}Q{1..4}).
+ *   - A small residual of unregistered/aggregated units stays "Unmapped".
  */
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { unzipSync } from 'fflate';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, '..', 'public', 'data', 'omie_bids_latest.json');
-
-const ESIOS_API_KEY = process.env.ESIOS_API_KEY;
 const UA = 'economic-data/energy-pipeline (+https://github.com/zeemarquez/economic-data)';
+const REGISTRY_URL = 'https://www.omie.es/sites/default/files/dados/listados/LISTA_UNIDADES.PDF';
 
 // ----------------------------------------------------------------- taxonomy
 // Canonical technology buckets -> { label, color } (colours tuned for a dark UI).
@@ -48,7 +46,7 @@ const TECHS = {
   nuclear:       { label: 'Nuclear',           color: '#c879ff' },
   coal:          { label: 'Coal',              color: '#8a6a55' },
   ccgt:          { label: 'Combined cycle',    color: '#ff5d73' },
-  cogen:         { label: 'Cogen / residual',  color: '#d9b94a' },
+  cogen:         { label: 'Cogen / thermal',   color: '#d9b94a' },
   waste_bio:     { label: 'Waste / biomass',   color: '#9abf3e' },
   oil:           { label: 'Fuel / gas oil',    color: '#b5651d' },
   import_export: { label: 'Import / export',   color: '#9aa0a6' },
@@ -57,41 +55,44 @@ const TECHS = {
   unmapped:      { label: 'Unmapped',          color: '#5b5650' },
 };
 
-/** ESIOS "Tipo de produccion" (accent-stripped, lowercased) -> canonical bucket. */
-function esiosTipoToTech(rawTipo) {
-  const t = norm(rawTipo);
+/** OMIE "TECNOLOGIA" (accent-stripped, lowercased) -> canonical bucket. */
+function omieTecToTech(rawTec) {
+  const t = norm(rawTec);
   if (!t) return null;
   if (t.includes('fotovolt')) return 'solar_pv';
-  if (t.includes('termosolar') || (t.includes('solar') && t.includes('term'))) return 'solar_thermal';
-  if (t.includes('eolic')) return 'wind';
-  if (t.includes('bombeo')) return 'pumped';
-  if (t.includes('hidra') || t.includes('fluyente') || t.includes('embalse') || t.includes('ugh')) return 'hydro';
+  if (t.includes('solar termica') || t.includes('termosolar')) return 'solar_thermal';
+  if (t.includes('eolica')) return 'wind';
+  if (t.includes('bombeo')) return 'pumped'; // "hidraulica de bombeo", "consumo de bombeo"
+  if (t.includes('hidraulica')) return 'hydro';
   if (t.includes('nuclear')) return 'nuclear';
   if (t.includes('ciclo combinado')) return 'ccgt';
-  if (t.includes('cogener') || t.includes('energia residual')) return 'cogen';
-  if (t.includes('residuo') || t.includes('biomasa') || t.includes('biogas')) return 'waste_bio';
+  if (t === 'gas' || t.includes('gas natural')) return 'ccgt';
   if (t.includes('hulla') || t.includes('antracita') || t.includes('carbon') || t.includes('lignito')) return 'coal';
-  if (t.includes('gas natural')) return 'ccgt';
-  if (t.includes('derivados del petroleo') || t.includes('fuel') || t.includes('gasoil') || t.includes('petroleo')) return 'oil';
-  if (t.includes('importacion') || t.includes('exportacion')) return 'import_export';
-  if (t.includes('almacenamiento') || t.includes('bateria')) return 'storage';
-  // Buy-side / commercial unit types that may leak through -> not a generation tech.
-  if (t.includes('comercializ') || t.includes('consumo') || t.includes('demanda') || t.includes('generic')) return 'other';
+  if (t.includes('termica renovable')) return 'waste_bio'; // biomass / renewable thermal
+  if (t.includes('termica no')) return 'cogen'; // non-renewable thermal (mostly cogeneration)
+  if (t.includes('cogener') || t.includes('residual')) return 'cogen';
+  if (t.includes('residuo') || t.includes('biomasa') || t.includes('biogas')) return 'waste_bio';
+  if (t.includes('geotermica')) return 'other';
+  if (t.includes('almacenamiento')) return 'storage';
+  if (t.includes('import') || t.includes('externos') || t.includes('no residente') || t.includes('internacional'))
+    return 'import_export';
+  // hybrids / portfolios / generic or CUR-tariff renewables with unspecified technology
+  if (
+    t.includes('hibrida') ||
+    t.includes('porfolio') ||
+    t.includes('portfolio') ||
+    t.includes('renovab') ||
+    t.includes('reg. especial') ||
+    t.includes('tarifa cur') ||
+    t.includes('tar. cur') ||
+    t.includes('generic')
+  )
+    return 'other';
+  // buy-side / commercial unit types (rare on the sell side)
+  if (t.includes('comercializ') || t.includes('compras') || t.includes('consumidor') || t.includes('consumo') || t.startsWith('rep.'))
+    return 'other';
   return 'other';
 }
-
-/**
- * Curated, best-effort supplement for the largest MIBEL units that are NOT in the
- * ESIOS Spanish registry (mostly Portuguese plants). High-confidence, well-documented
- * plants only; anything uncertain is left to fall through to "Unmapped".
- */
-const SUPPLEMENT = {
-  // Portuguese hydro schemes (river/cascade names)
-  TAMEGA: 'hydro', ADOURO: 'hydro', DOUSUP: 'hydro', ALIMA: 'hydro',
-  ACAVADO: 'hydro', MONDEGO: 'hydro', GUADIA: 'hydro', TEMON: 'hydro',
-  // Portuguese combined-cycle gas
-  RIBATE1: 'ccgt', RIBATE2: 'ccgt', RIBATE3: 'ccgt', LARES1: 'ccgt', LARES2: 'ccgt',
-};
 
 // ----------------------------------------------------------------- helpers
 function norm(s) {
@@ -103,68 +104,49 @@ function num(s) {
   return Number.isFinite(v) ? v : NaN;
 }
 
-async function getJson(url) {
-  const res = await fetch(url, {
-    headers: {
-      Accept: 'application/json; application/vnd.esios-api-v1+json',
-      'x-api-key': ESIOS_API_KEY,
-      'User-Agent': UA,
-    },
-  });
-  if (!res.ok) throw new Error(`ESIOS ${url}: HTTP ${res.status}`);
-  return res.json();
-}
-
-/** Read a field from an ESIOS record by matching an accent-insensitive key fragment. */
-function field(rec, frag) {
-  for (const k of Object.keys(rec)) {
-    if (norm(k).includes(frag)) return rec[k];
-  }
-  return undefined;
-}
-
 // ----------------------------------------------------------------- 1. crosswalk
-async function buildCrosswalk() {
-  if (!ESIOS_API_KEY) {
-    throw new Error(
-      'ESIOS_API_KEY is not set. Get a free token (https://www.esios.ree.es/en/page/api) ' +
-      'and run:  node --env-file=.env scripts/buildEnergyData.mjs'
-    );
-  }
-  console.log('Fetching ESIOS unit registries (archives 82 + 81)...');
-  const [up, uf] = await Promise.all([
-    getJson('https://api.esios.ree.es/archives/82/download_json?locale=es'),
-    getJson('https://api.esios.ree.es/archives/81/download_json?locale=es'),
-  ]);
-  const upRows = up.UnidadesProgramacion || up.ProgrammingUnits || [];
-  const ufRows = uf.UnidadesFisicas || uf.GenerationUnits || [];
+async function fetchUnitRegistry() {
+  console.log('Fetching OMIE unit->technology registry (LISTA_UNIDADES.PDF)...');
+  const res = await fetch(REGISTRY_URL, { headers: { 'User-Agent': UA } });
+  if (!res.ok) throw new Error(`LISTA_UNIDADES: HTTP ${res.status}`);
+  const data = new Uint8Array(await res.arrayBuffer());
+  const doc = await getDocument({ data, useSystemFonts: true, verbosity: 0 }).promise;
 
   const code2tech = new Map();
-  const add = (code, tipo) => {
-    if (!code || code2tech.has(code)) return;
-    const tech = esiosTipoToTech(tipo);
-    if (tech) code2tech.set(String(code).trim(), tech);
-  };
-  // Programming units first (their code namespace is closest to OMIE offer codes),
-  // then physical units to widen coverage.
-  for (const r of upRows) add(field(r, 'codigo de up'), field(r, 'tipo de produccion'));
-  for (const r of ufRows) add(field(r, 'codigo de uf'), field(r, 'tipo de produccion'));
-
-  console.log(`  ESIOS crosswalk: ${code2tech.size} unit codes (UP=${upRows.length}, UF=${ufRows.length}).`);
+  // TECNOLOGIA is the column right after ZONA/FRONTERA; reconstruct rows by y-position.
+  const zoneRe = /(ZONA ESPA\S+|ZONA PORTUGUESA|FRONTERA [A-Z]+)\s{1,}(.+)/;
+  for (let p = 1; p <= doc.numPages; p++) {
+    const page = await doc.getPage(p);
+    const { items } = await page.getTextContent();
+    const rows = new Map();
+    for (const it of items) {
+      if (!it.str.trim()) continue;
+      const y = Math.round(it.transform[5]);
+      let key = null;
+      for (const k of rows.keys()) if (Math.abs(k - y) <= 2) { key = k; break; }
+      if (key == null) { key = y; rows.set(y, []); }
+      rows.get(key).push({ x: it.transform[4], s: it.str });
+    }
+    for (const cells of rows.values()) {
+      cells.sort((a, b) => a.x - b.x);
+      const line = cells.map((c) => c.s).join(' ').replace(/\s+/g, ' ').trim();
+      const code = line.split(' ')[0];
+      if (!/^[A-Z0-9_]{2,12}$/.test(code) || code === 'CODIGO' || code2tech.has(code)) continue;
+      const m = line.match(zoneRe);
+      if (!m) continue;
+      const tech = omieTecToTech(m[2]);
+      if (tech) code2tech.set(code, tech);
+    }
+  }
+  console.log(`  Registry: ${code2tech.size} offer units mapped to technology.`);
   return code2tech;
 }
 
 /** Classify a single OMIE offer-unit code -> canonical tech bucket. */
 function classify(unit, code2tech) {
-  if (code2tech.has(unit)) return code2tech.get(unit);
-  // suffix variants common in OMIE offer codes (e.g. trailing "R" for redespacho)
-  const stripR = unit.replace(/R$/, '');
-  if (stripR !== unit && code2tech.has(stripR)) return code2tech.get(stripR);
-  const stripNum = unit.replace(/\d+R?$/, '');
-  if (stripNum && code2tech.has(stripNum)) return code2tech.get(stripNum);
-  if (SUPPLEMENT[unit]) return SUPPLEMENT[unit];
-  // OMIE import/export pseudo-units
-  if (/^(MIE|MIP|MIEU|MIPU)/.test(unit)) return 'import_export';
+  const t = code2tech.get(unit);
+  if (t) return t;
+  if (/^(MIE|MIP|MIEU|MIPU)/.test(unit)) return 'import_export'; // OMIE import/export pseudo-units
   return 'unmapped';
 }
 
@@ -212,7 +194,7 @@ async function downloadLatestDay(yyyymm) {
  * OMIE's official day-ahead marginal (clearing) price, per 15-min period (1..96).
  * Authoritative — accounts for complex conditions (block bids, minimum income) that a
  * naive "highest matched sell offer" approximation can miss. Dot decimals here.
- * Returns Map<periodoIdx (1..96), €/MWh ES>.
+ * Returns Map<periodoIdx (1..96), EUR/MWh ES>.
  */
 async function fetchMarginalPrice(day) {
   const url = `https://www.omie.es/en/file-download?parents=marginalpdbc&filename=marginalpdbc_${day}.1`;
@@ -236,9 +218,8 @@ async function fetchMarginalPrice(day) {
 
 // ----------------------------------------------------------------- 3. build curves
 function buildCurves(text, code2tech, marginal) {
-  // Per-period accumulators.
   const periods = new Map(); // id -> { offers: Map<"price|tech", mwh>, clearing, clearedMwh, offeredMwh }
-  const techMwh = {};        // canonical tech -> offered MWh (for coverage stats)
+  const techMwh = {};
   let totalOffered = 0;
 
   for (const line of text.split('\n')) {
@@ -260,7 +241,6 @@ function buildCurves(text, code2tech, marginal) {
     }
 
     if (oc === 'O') {
-      // Offered segment -> part of the submitted supply curve.
       const tech = classify(p[3], code2tech);
       const key = `${price.toFixed(2)}|${tech}`;
       rec.offers.set(key, (rec.offers.get(key) || 0) + mwh);
@@ -268,13 +248,11 @@ function buildCurves(text, code2tech, marginal) {
       techMwh[tech] = (techMwh[tech] || 0) + mwh;
       totalOffered += mwh;
     } else if (oc === 'C') {
-      // Matched segment -> real clearing comes from the most expensive matched sell.
       rec.clearedMwh += mwh;
       if (price > rec.clearing) rec.clearing = price;
     }
   }
 
-  // Determine which technologies actually appear, ordered by the canonical taxonomy.
   const presentKeys = Object.keys(TECHS).filter((k) => techMwh[k] > 0 || k === 'unmapped');
   const techIndex = new Map(presentKeys.map((k, i) => [k, i]));
   const technologies = presentKeys.map((k) => ({ key: k, label: TECHS[k].label, color: TECHS[k].color }));
@@ -283,7 +261,6 @@ function buildCurves(text, code2tech, marginal) {
     .map(([id, rec]) => {
       const m = id.match(/^H(\d{1,2})Q(\d)$/);
       const hour = +m[1], quarter = +m[2];
-      // Merge same-(price,tech) offers, sort by price ascending (merit order).
       const offers = [...rec.offers.entries()]
         .map(([k, v]) => {
           const [pr, tech] = k.split('|');
@@ -296,7 +273,6 @@ function buildCurves(text, code2tech, marginal) {
       const mm = String(startMin % 60).padStart(2, '0');
       const ehh = String(Math.floor((startMin + 15) / 60) % 24).padStart(2, '0');
       const emm = String((startMin + 15) % 60).padStart(2, '0');
-      // Prefer OMIE's official marginal price; fall back to the derived approximation.
       const official = marginal?.get((hour - 1) * 4 + quarter);
       const clearing =
         official != null
@@ -326,7 +302,7 @@ function buildCurves(text, code2tech, marginal) {
 
 // ----------------------------------------------------------------- run
 async function main() {
-  const code2tech = await buildCrosswalk();
+  const code2tech = await fetchUnitRegistry();
   const yyyymm = await findLatestMonth();
   const { day, text } = await downloadLatestDay(yyyymm);
   const marginal = await fetchMarginalPrice(day);
@@ -343,13 +319,13 @@ async function main() {
       monthFile: `curva_pbc_uof_${yyyymm}.zip`,
       lagDays,
       periods: periods.length,
-      source: 'OMIE curva_pbc_uof (day-ahead per-unit bids, sell side) + marginalpdbc + ESIOS unit registries',
-      crosswalk: 'ESIOS Unidades de Programacion (82) + Unidades Fisicas (81), Tipo de produccion',
+      source: 'OMIE curva_pbc_uof (day-ahead per-unit bids) + marginalpdbc + LISTA_UNIDADES registry',
+      crosswalk: 'OMIE LISTADO DE UNIDADES OFERTANTES VIGENTES (TECNOLOGIA per offer unit)',
       coverage,
       notes: [
         'Unit-identified bids are public only after a ~90-day confidentiality window, so this is the latest available day (~3 months lagged).',
-        "Each step is a real sell offer (merged by price level within a technology). Clearing price is OMIE's official marginal price (marginalpdbc) per 15-min period.",
-        'OMIE offer-unit codes only partially overlap the ESIOS registry; unmatched volume (notably Portuguese MIBEL units and aggregated/portfolio renewables) is shown as "Unmapped".',
+        'Each step is a real sell offer (merged by price level within a technology). Clearing price is OMIE’s official marginal price (marginalpdbc) per 15-min period.',
+        'Technology comes from OMIE’s own unit registry (same code namespace as the bids), covering Spanish and Portuguese MIBEL units; a small residual of unregistered units is shown as "Unmapped".',
       ],
     },
     technologies,

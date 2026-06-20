@@ -25,8 +25,8 @@ The dashboards read JSON baked at build time (committed under `data/` and `publi
 
 - `npm run build:data` — Inflation series from public FRED/dataset CSVs → `data/inflation_annual.json`.
 - `npm run build:energy` — OMIE day-ahead **supply curve by technology** → `public/data/omie_bids_latest.json`.
-  Fetches the latest available OMIE `curva_pbc_uof` month, joins offers to an ESIOS unit→technology
-  crosswalk, and derives the real per-period clearing price. Needs a free ESIOS token in `.env`
-  (`ESIOS_API_KEY=…`, see [.env.example](.env.example)). Note: unit-identified bids are public only
+  Fetches the latest available OMIE `curva_pbc_uof` month, the official `marginalpdbc` clearing prices,
+  and OMIE's own unit→technology registry (`LISTA_UNIDADES`, same code namespace → ~99% coverage,
+  Spanish + Portuguese MIBEL units). No API token required. Note: unit-identified bids are public only
   after a ~90-day confidentiality window, so the dashboard always shows the latest available day
   (~3 months lagged) — this is inherent to the data, not a bug.

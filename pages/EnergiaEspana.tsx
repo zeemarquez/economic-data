@@ -356,7 +356,7 @@ export default function EnergiaEspana() {
               <Kpi label="Energía ofertada" value={NF(period.offeredMwh / 1000, 1)} unit="GWh" />
               <Kpi
                 label="Cobertura mapeada"
-                value={NF(bundle.meta.coverage.mappedPct * 100, 0)}
+                value={NF(Math.floor(bundle.meta.coverage.mappedPct * 1000) / 10, 1)}
                 unit="% MWh"
               />
             </div>
@@ -536,17 +536,17 @@ export default function EnergiaEspana() {
               <p>
                 <span className="text-neutral-300">Límites honestos.</span> Las ofertas con unidad identificada solo
                 son públicas tras la ventana de confidencialidad de ~90 días, por lo que se muestra el último día
-                disponible ({bundle.meta.marketDate}, desfase {bundle.meta.lagDays} días). Los códigos de unidad de
-                OMIE solo coinciden parcialmente con el registro de ESIOS:{' '}
+                disponible ({bundle.meta.marketDate}, desfase {bundle.meta.lagDays} días). La tecnología procede del
+                registro oficial de unidades de OMIE (mismo código que las ofertas), que cubre unidades españolas y
+                portuguesas del MIBEL:{' '}
                 <span className="text-neutral-400">
-                  {NF(bundle.meta.coverage.mappedPct * 100, 0)}% del volumen
+                  {NF(bundle.meta.coverage.mappedPct * 100, 1)}% del volumen
                 </span>{' '}
-                queda mapeado por tecnología. El resto —sobre todo renovables agregadas vía representación y unidades
-                portuguesas del MIBEL— aparece como <span className="text-neutral-400">«Unmapped»</span> en lugar de
-                ocultarse.
+                queda mapeado por tecnología; un pequeño resto de unidades sin registrar aparece como{' '}
+                <span className="text-neutral-400">«Unmapped»</span> en lugar de ocultarse.
               </p>
               <p className="text-neutral-600">
-                Fuentes: OMIE {bundle.meta.monthFile} · ESIOS Unidades de Programación/Físicas (Tipo de producción).
+                Fuentes: OMIE {bundle.meta.monthFile} · LISTADO DE UNIDADES OFERTANTES VIGENTES (tecnología por unidad).
               </p>
             </div>
           </>
