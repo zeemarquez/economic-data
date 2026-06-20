@@ -39,7 +39,8 @@ const PAGES = [
   {
     path: '/energia-espana',
     title: 'Energía España',
-    description: 'Visualización retro-futurista de generación energética: nuclear, eólica y solar.',
+    description:
+      'Curva de oferta del mercado diario (OMIE) por tecnología: pujas reales de precio y energía, con precio de casación.',
     icon: <Zap size={20} />,
   },
   {
