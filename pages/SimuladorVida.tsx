@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Calculator, LineChart as ChartIcon, LayoutDashboard, ChevronDown, ChevronRight, BookOpen, Info, Maximize2, Minimize2 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
 import { Tooltip } from '../components/ui/Tooltip';
 import { runModeloVida, InputsModeloVida } from '../lib/vidaModel';
+import { SPANISH_REGIMES_2026 } from '../regimes';
 import {
     ComposedChart,
     Line,
@@ -17,6 +19,12 @@ import {
     ResponsiveContainer,
     Cell
 } from 'recharts';
+
+const DEFAULT_REGIME_ID = 'es-madrid-2026';
+const REGIME_OPTIONS = SPANISH_REGIMES_2026.map((r) => ({
+    value: r.id,
+    label: r.name.replace(/\s*\(2026\)\s*$/, ''),
+}));
 
 const defaultInputs: InputsModeloVida = {
     nacimiento_hijos: [2030, 2031],
@@ -38,6 +46,7 @@ const defaultInputs: InputsModeloVida = {
 
     capital_inicial: 30,
     tasa_impositiva_salario: 0.31,
+    regime_id: DEFAULT_REGIME_ID,
     year_jubilacion: 2065,
     crecimiento_salario: 0,
     porcentaje_gastos_fijos_vivienda: 0.02,
@@ -54,6 +63,45 @@ const formatCurrency = (val: number) => new Intl.NumberFormat('es-ES', { maximum
 const formatInput = (val: number) => {
     if (isNaN(val)) return '0';
     return Number(val.toFixed(1)).toString();
+};
+
+/**
+ * Percentage input that stores its value as a decimal fraction (e.g. 0.029) but lets the
+ * user type the percentage with up to one decimal (e.g. "2.9"). Uses local string state
+ * while focused so intermediate values like "2." or "2,9" are not reformatted away, which
+ * is what previously made decimals impossible. inputMode="decimal" gives a proper mobile
+ * keypad with a separator key.
+ */
+const PercentInput: React.FC<{
+    label: string;
+    value: number;
+    onCommit: (value: number) => void;
+    tooltip?: string;
+}> = ({ label, value, onCommit, tooltip }) => {
+    const [draft, setDraft] = useState<string | null>(null);
+    const display = draft ?? formatInput(value * 100);
+    return (
+        <Input
+            label={label}
+            suffix="%"
+            type="text"
+            inputMode="decimal"
+            tooltip={tooltip}
+            value={display}
+            onChange={(e) => {
+                const raw = e.target.value;
+                setDraft(raw);
+                const norm = raw.replace(',', '.').trim();
+                if (norm === '') {
+                    onCommit(0);
+                    return;
+                }
+                const parsed = parseFloat(norm);
+                if (!isNaN(parsed)) onCommit(parsed / 100);
+            }}
+            onBlur={() => setDraft(null)}
+        />
+    );
 };
 
 const CustomChartTooltip = ({ active, payload, label }: any) => {
@@ -131,7 +179,7 @@ const CONCEPT_TOOLTIPS: Record<string, string> = {
     'Ingresos brutos real': 'Poder adquisitivo del salario ajustado por inflación.',
     'Jubilado': 'Indica si se ha dejado de percibir ingresos del trabajo.',
     'Ingresos totales': 'Salario real percibido antes de impuestos.',
-    'Tasa impositiva': 'Porcentaje medio de impuestos sobre la renta aplicada.',
+    'Tasa impositiva': 'Tasa efectiva (IRPF + Seguridad Social del trabajador) según la comunidad autónoma, calculada sobre los ingresos brutos de cada año.',
     'Ingresos netos': 'Dinero disponible tras pagar impuestos (en términos reales).',
     'Gastos vivienda (nominal)': 'Total vivienda nominal (valores base, sin ajuste por inflación).',
     'Gastos vivienda (real)': 'Total vivienda real (ajustado a inflación); es el flujo de caja efectivo.',
@@ -277,8 +325,8 @@ const METOD_SECTIONS: MetodSection[] = [
             },
             {
                 label: 'Impuestos y neto',
-                desc: 'Se aplica una tasa impositiva media fija (por defecto 31 %) sobre los ingresos reales para obtener los ingresos netos disponibles. Tras la jubilación, los ingresos del trabajo pasan a cero.',
-                formula: 'IngNeto(t) = IngBrutoReal(t) × (1 − TasaImpositiva)'
+                desc: 'La tasa impositiva se calcula a partir de la comunidad autónoma seleccionada, aplicando el IRPF progresivo (tramos estatales + autonómicos) y la Seguridad Social del trabajador sobre los ingresos brutos de cada año (mismo motor que la calculadora de nómina). Como el salario varía a lo largo de la vida, la tasa efectiva cambia cada año. Tras la jubilación, los ingresos del trabajo pasan a cero.',
+                formula: 'TasaImpositiva(t) = (IRPF(t) + SS_trabajador(t)) / IngBruto(t)\nIngNeto(t) = IngBrutoReal(t) × (1 − TasaImpositiva(t))'
             },
             {
                 label: 'Resultado neto del año',
@@ -438,7 +486,7 @@ function MetodologiaPanel() {
                     {/* Footer */}
                     <div className="px-6 py-4 border-t border-white/5 flex items-center gap-2">
                         <span className="text-[10px] font-mono text-neutral-700 uppercase tracking-wider">
-                            Premisas clave: inflación constante · tasa impositiva media fija · TIR de inversiones constante · hipoteca a tipo fijo · todos los valores en k€
+                            Premisas clave: inflación constante · tasa impositiva por comunidad autónoma (IRPF + SS) · TIR de inversiones constante · hipoteca a tipo fijo · todos los valores en k€
                         </span>
                     </div>
                 </div>
@@ -772,7 +820,17 @@ export default function SimuladorVida() {
     };
 
     const addChildYear = (year: number) => {
-        setInputs({ ...inputs, nacimiento_hijos: [...inputs.nacimiento_hijos, year].sort() });
+        setInputs({ ...inputs, nacimiento_hijos: [...inputs.nacimiento_hijos, year].sort((a, b) => a - b) });
+    };
+
+    // Commit a child birth year from the "add" input. Used by both Enter (desktop) and blur
+    // (mobile, where soft keyboards often don't fire a reliable Enter keydown event).
+    const commitChildYearFromInput = (el: HTMLInputElement) => {
+        const val = parseInt(el.value, 10);
+        if (!isNaN(val) && val > 1900 && val < 2100) {
+            addChildYear(val);
+            el.value = '';
+        }
     };
 
     const removeChildYear = (index: number) => {
@@ -786,7 +844,6 @@ export default function SimuladorVida() {
             return {
                 ...inputs,
                 ingresos_tabla: undefined,
-                tasa_impositiva_salario: 0.31,
                 alquiler_mensual: (inputs.precio_vivienda * 1000 * 0.05) / 12,
                 tin_hipoteca: 0.029,
                 years_hipoteca: 30,
@@ -895,6 +952,9 @@ export default function SimuladorVida() {
                                         <Input label="Ingresos Y0" suffix="k€" value={formatInput(inputs.ingresos_trabajo_brutos_y0)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y0')} tooltip="Ingresos totales brutos del hogar en el primer año (salarios nominales)." />
                                         <Input label="Ingresos Y15" suffix="k€" value={formatInput(inputs.ingresos_trabajo_brutos_y15)} onChange={e => handleInputChange(e, 'ingresos_trabajo_brutos_y15')} tooltip="Ingresos totales brutos estimados del hogar en el año 15 (salarios nominales)." />
                                         <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a ser cero." />
+                                        <div className="col-span-2">
+                                            <Select label="Comunidad" value={inputs.regime_id ?? DEFAULT_REGIME_ID} options={REGIME_OPTIONS} onChange={id => setInputs({ ...inputs, regime_id: id })} id="regime-simple" />
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col gap-2">
@@ -958,10 +1018,12 @@ export default function SimuladorVida() {
                                         <p className="text-[10px] font-mono text-neutral-600 pl-1 mt-0.5">
                                             Interpolación lineal entre puntos · Extrapolación constante más allá del último
                                         </p>
-                                        {/* Tax rate, salary growth and retirement year in detailed mode */}
-                                        <div className="grid grid-cols-3 gap-3 mt-1">
-                                            <Input type="number" step="0.1" label="Tasa" suffix="%" value={formatInput(inputs.tasa_impositiva_salario! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tasa_impositiva_salario')} tooltip="Tasa impositiva media aplicada al salario bruto para calcular el neto." />
-                                            <Input type="number" step="0.1" label="Crec.Sal" suffix="%" value={formatInput((inputs.crecimiento_salario ?? 0) * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'crecimiento_salario')} tooltip="Tasa de crecimiento anual nominal del salario bruto. Por defecto igual a la inflación. Determina cómo aumentan los ingresos reales año a año." />
+                                        {/* Comunidad autónoma (drives IRPF + SS), salary growth and retirement year */}
+                                        <div className="mt-1">
+                                            <Select label="Comunidad" value={inputs.regime_id ?? DEFAULT_REGIME_ID} options={REGIME_OPTIONS} onChange={id => setInputs({ ...inputs, regime_id: id })} id="regime-detallado" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3 items-end">
+                                            <PercentInput label="Crec.Sal" value={inputs.crecimiento_salario ?? 0} onCommit={v => setInputs({ ...inputs, crecimiento_salario: v })} tooltip="Tasa de crecimiento anual nominal del salario bruto. Por defecto igual a la inflación. Determina cómo aumentan los ingresos reales año a año." />
                                             <Input label="Año Jubilac." value={formatInput(inputs.year_jubilacion!)} onChange={e => handleInputChange(e, 'year_jubilacion')} tooltip="Año previsto de jubilación. A partir de este año los ingresos del trabajo pasan a ser cero." />
                                         </div>
                                     </div>
@@ -978,9 +1040,9 @@ export default function SimuladorVida() {
                                     {!modoSimple && (
                                         <>
                                             <Input label="Años Hipoteca" value={formatInput(inputs.years_hipoteca)} onChange={e => handleInputChange(e, 'years_hipoteca')} tooltip="Duración total del préstamo hipotecario en años." />
-                                            <Input type="number" step="0.1" label="TIN" suffix="%" value={formatInput(inputs.tin_hipoteca * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tin_hipoteca')} tooltip="Tipo de Interés Nominal de la hipoteca." />
-                                            <Input type="number" step="0.1" label="Entrada" suffix="%" value={formatInput(inputs.porcentaje_entrada_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_entrada_vivienda')} tooltip="Porcentaje del precio de la vivienda que se aporta como entrada inicial." />
-                                            <Input type="number" step="0.1" label="Gastos" suffix="%" value={formatInput(inputs.porcentaje_gastos_fijos_vivienda! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'porcentaje_gastos_fijos_vivienda')} tooltip="Gastos anuales fijos del inmueble (IBI, comunidad, mantenimiento) como % del precio." />
+                                            <PercentInput label="TIN" value={inputs.tin_hipoteca} onCommit={v => setInputs({ ...inputs, tin_hipoteca: v })} tooltip="Tipo de Interés Nominal de la hipoteca." />
+                                            <PercentInput label="Entrada" value={inputs.porcentaje_entrada_vivienda ?? 0} onCommit={v => setInputs({ ...inputs, porcentaje_entrada_vivienda: v })} tooltip="Porcentaje del precio de la vivienda que se aporta como entrada inicial." />
+                                            <PercentInput label="Gastos" value={inputs.porcentaje_gastos_fijos_vivienda ?? 0} onCommit={v => setInputs({ ...inputs, porcentaje_gastos_fijos_vivienda: v })} tooltip="Gastos anuales fijos del inmueble (IBI, comunidad, mantenimiento) como % del precio." />
                                         </>
                                     )}
                                     <div className="col-span-2">
@@ -1013,17 +1075,16 @@ export default function SimuladorVida() {
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
+                                                enterKeyHint="done"
                                                 placeholder="Añadir año..."
                                                 className="bg-transparent border-none outline-none text-xs font-mono text-white placeholder-neutral-600 w-24 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
-                                                        const val = parseInt((e.target as HTMLInputElement).value);
-                                                        if (!isNaN(val) && val > 1900 && val < 2100) {
-                                                            addChildYear(val);
-                                                            (e.target as HTMLInputElement).value = '';
-                                                        }
+                                                        e.preventDefault();
+                                                        commitChildYearFromInput(e.target as HTMLInputElement);
                                                     }
                                                 }}
+                                                onBlur={(e) => commitChildYearFromInput(e.target)}
                                             />
                                         </div>
                                     </div>
@@ -1090,9 +1151,9 @@ export default function SimuladorVida() {
                                 <h3 className="text-neutral-400 font-mono text-[10px] uppercase tracking-widest border-b border-white/5 pb-1">Patrimonio</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <Input label="Capital" suffix="k€" value={formatInput(inputs.capital_inicial!)} onChange={e => handleInputChange(e, 'capital_inicial')} tooltip="Capital o ahorros líquidos iniciales al comienzo de la simulación." />
-                                    <Input type="number" step="0.1" label="TIR" suffix="%" value={formatInput(inputs.tir_ahorros! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_ahorros')} tooltip="Rentabilidad anual esperada de los ahorros e inversiones líquidas." />
-                                    <Input type="number" step="0.1" label="TIR Inmo." suffix="%" value={formatInput(inputs.tir_inmobiliaria! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'tir_inmobiliaria')} tooltip="Tasa de revalorización anual esperada del precio de la vivienda." />
-                                    <Input type="number" step="0.1" label="Inflacción" suffix="%" value={formatInput(inputs.inflaccion! * 100)} onChange={e => handleInputChange({ ...e, target: { ...e.target, value: String(Number(e.target.value) / 100) } } as any, 'inflaccion')} tooltip="Tasa de inflación anual prevista para el ajuste de precios y valores reales." />
+                                    <PercentInput label="TIR" value={inputs.tir_ahorros ?? 0} onCommit={v => setInputs({ ...inputs, tir_ahorros: v })} tooltip="Rentabilidad anual esperada de los ahorros e inversiones líquidas." />
+                                    <PercentInput label="TIR Inmo." value={inputs.tir_inmobiliaria ?? 0} onCommit={v => setInputs({ ...inputs, tir_inmobiliaria: v })} tooltip="Tasa de revalorización anual esperada del precio de la vivienda." />
+                                    <PercentInput label="Inflacción" value={inputs.inflaccion ?? 0} onCommit={v => setInputs({ ...inputs, inflaccion: v })} tooltip="Tasa de inflación anual prevista para el ajuste de precios y valores reales." />
                                 </div>
                             </div>
                         </div>

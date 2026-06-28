@@ -1,3 +1,7 @@
+import { SalaryBreakdown } from '../SalaryBreakdown';
+import { SPANISH_REGIMES_2026 } from '../regimes';
+import type { TaxRegime } from '../types';
+
 export interface InputsModeloVida {
     nacimiento_hijos: number[];
     coste_educacion_mensual: number;
@@ -24,6 +28,10 @@ export interface InputsModeloVida {
     capital_inicial?: number;
     tir_ahorros?: number;
     tasa_impositiva_salario?: number;
+    /** Autonomous community regime id (e.g. 'es-madrid-2026'). When set, the effective
+     * tax rate is computed per period from gross income (IRPF + employee SS) instead of
+     * using the flat tasa_impositiva_salario. */
+    regime_id?: string;
     year_jubilacion?: number;
     gastos_jubilado?: number;
     ayuda_entrada?: number;
@@ -40,6 +48,23 @@ export interface RowMetadata {
     group: string;
 }
 
+/**
+ * Effective income tax rate (IRPF + employee Social Security, as a fraction of gross)
+ * for a given annual gross salary, using the same payroll engine as the nómina page.
+ * Module-level memoised by (regime, gross) so repeated model runs (calculators) are cheap.
+ */
+const _effectiveRateCache = new Map<string, number>();
+function effectiveRateForGross(regime: TaxRegime, grossKeur: number): number {
+    if (grossKeur <= 0) return 0;
+    const key = `${regime.id}:${Math.round(grossKeur * 10)}`;
+    const cached = _effectiveRateCache.get(key);
+    if (cached !== undefined) return cached;
+    const breakdown = new SalaryBreakdown({ grossSalary: grossKeur * 1000 }, regime);
+    const rate = breakdown.effectiveTaxRate / 100;
+    _effectiveRateCache.set(key, rate);
+    return rate;
+}
+
 export function runModeloVida(inputs: InputsModeloVida) {
     const periods = 60;
     const initial_period = 2026;
@@ -52,6 +77,9 @@ export function runModeloVida(inputs: InputsModeloVida) {
     const capital_inicial = inputs.capital_inicial ?? 20;
     const tir_ahorros = inputs.tir_ahorros ?? 0.09;
     const tasa_impositiva_salario = inputs.tasa_impositiva_salario ?? 0.30;
+    const regime = inputs.regime_id
+        ? SPANISH_REGIMES_2026.find(r => r.id === inputs.regime_id)
+        : undefined;
     const year_jubilacion = inputs.year_jubilacion ?? 2065;
     const ayuda_entrada = inputs.ayuda_entrada ?? 0;
     const liquido_minimo = inputs.liquido_minimo ?? 5;
@@ -216,7 +244,12 @@ export function runModeloVida(inputs: InputsModeloVida) {
     // Real income uses dedicated salary growth (not general CPI)
     const arr_ingresos_brutos_real = makeArr(t => arr_ingresos_brutos_nominal[t] * (1 + arr_crecimiento_salario_acumulado[t]));
     const arr_ingresos_totales = makeArr(t => arr_ingresos_brutos_real[t] * (1 - arr_jubilado[t]));
-    const arr_tasa_impositiva = makeArr(() => tasa_impositiva_salario);
+    // When a comunidad autónoma regime is selected, derive the effective rate per period
+    // from that year's gross income (progressive IRPF + employee SS); otherwise fall back
+    // to the flat tasa_impositiva_salario.
+    const arr_tasa_impositiva = makeArr(t => regime
+        ? effectiveRateForGross(regime, arr_ingresos_totales[t])
+        : tasa_impositiva_salario);
     const arr_ingresos_netos = makeArr(t => arr_ingresos_totales[t] - arr_ingresos_totales[t] * arr_tasa_impositiva[t]);
 
     const arr_gastos_vivienda_nominal = makeArr(t => arr_total_vivienda_nominal[t]);
